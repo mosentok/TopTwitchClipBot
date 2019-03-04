@@ -260,3 +260,4 @@ paket-files/
 __pycache__/
 *.pyc
 /TopTwitchClipBotCore/appsettings.json
+/TopTwitchClipBotModel/appsettings.json
