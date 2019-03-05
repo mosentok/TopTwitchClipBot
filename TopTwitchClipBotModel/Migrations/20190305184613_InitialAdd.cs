@@ -23,7 +23,7 @@ namespace TopTwitchClipBotModel.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ChannelTopClipConfig",
+                name: "BroadcasterConfig",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -34,9 +34,9 @@ namespace TopTwitchClipBotModel.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ChannelTopClipConfig", x => x.Id);
+                    table.PrimaryKey("PK_BroadcasterConfig", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ChannelTopClipConfig_ChannelConfig_ChannelId",
+                        name: "FK_BroadcasterConfig_ChannelConfig_ChannelId",
                         column: x => x.ChannelId,
                         principalTable: "ChannelConfig",
                         principalColumn: "ChannelId",
@@ -44,45 +44,45 @@ namespace TopTwitchClipBotModel.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TopClipHistory",
+                name: "BroadcasterHistory",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    ChannelTopClipConfigId = table.Column<int>(nullable: false),
+                    BroadcasterConfigId = table.Column<int>(nullable: false),
                     Slug = table.Column<string>(type: "varchar(100)", nullable: true),
                     ClipUrl = table.Column<string>(type: "varchar(255)", nullable: true),
                     Stamp = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TopClipHistory", x => x.Id);
+                    table.PrimaryKey("PK_BroadcasterHistory", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TopClipHistory_ChannelTopClipConfig_ChannelTopClipConfigId",
-                        column: x => x.ChannelTopClipConfigId,
-                        principalTable: "ChannelTopClipConfig",
+                        name: "FK_BroadcasterHistory_BroadcasterConfig_BroadcasterConfigId",
+                        column: x => x.BroadcasterConfigId,
+                        principalTable: "BroadcasterConfig",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChannelTopClipConfig_ChannelId",
-                table: "ChannelTopClipConfig",
+                name: "IX_BroadcasterConfig_ChannelId",
+                table: "BroadcasterConfig",
                 column: "ChannelId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TopClipHistory_ChannelTopClipConfigId",
-                table: "TopClipHistory",
-                column: "ChannelTopClipConfigId");
+                name: "IX_BroadcasterHistory_BroadcasterConfigId",
+                table: "BroadcasterHistory",
+                column: "BroadcasterConfigId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "TopClipHistory");
+                name: "BroadcasterHistory");
 
             migrationBuilder.DropTable(
-                name: "ChannelTopClipConfig");
+                name: "BroadcasterConfig");
 
             migrationBuilder.DropTable(
                 name: "ChannelConfig");

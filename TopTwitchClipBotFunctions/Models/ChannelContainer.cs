@@ -6,11 +6,11 @@ namespace TopTwitchClipBotFunctions.Models
 {
     public class ChannelContainer
     {
-        public List<TopClipHistoryContainer> TopClipHistoryContainers { get; set; }
+        public List<BroadcasterHistoryContainer> BroadcasterHistoryContainers { get; set; }
         public IMessageChannel Channel { get; set; }
-        public ChannelContainer(List<TopClipHistoryContainer> topClipHistoryContainers, IMessageChannel channel)
+        public ChannelContainer(List<BroadcasterHistoryContainer> broadcasterHistoryContainers, IMessageChannel channel)
         {
-            TopClipHistoryContainers = topClipHistoryContainers;
+            BroadcasterHistoryContainers = broadcasterHistoryContainers;
             Channel = channel;
         }
     }

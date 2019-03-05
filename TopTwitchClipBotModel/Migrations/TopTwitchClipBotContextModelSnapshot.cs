@@ -19,24 +19,7 @@ namespace TopTwitchClipBotModel.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("TopTwitchClipBotModel.ChannelConfig", b =>
-                {
-                    b.Property<decimal>("ChannelId")
-                        .HasColumnType("decimal(20,0)");
-
-                    b.Property<int?>("MaxPostingHour");
-
-                    b.Property<int?>("MinPostingHour");
-
-                    b.Property<string>("Prefix")
-                        .HasColumnType("varchar(4)");
-
-                    b.HasKey("ChannelId");
-
-                    b.ToTable("ChannelConfig");
-                });
-
-            modelBuilder.Entity("TopTwitchClipBotModel.ChannelTopClipConfig", b =>
+            modelBuilder.Entity("TopTwitchClipBotModel.BroadcasterConfig", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -54,16 +37,16 @@ namespace TopTwitchClipBotModel.Migrations
 
                     b.HasIndex("ChannelId");
 
-                    b.ToTable("ChannelTopClipConfig");
+                    b.ToTable("BroadcasterConfig");
                 });
 
-            modelBuilder.Entity("TopTwitchClipBotModel.TopClipHistory", b =>
+            modelBuilder.Entity("TopTwitchClipBotModel.BroadcasterHistory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("ChannelTopClipConfigId");
+                    b.Property<int>("BroadcasterConfigId");
 
                     b.Property<string>("ClipUrl")
                         .HasColumnType("varchar(255)");
@@ -75,24 +58,41 @@ namespace TopTwitchClipBotModel.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChannelTopClipConfigId");
+                    b.HasIndex("BroadcasterConfigId");
 
-                    b.ToTable("TopClipHistory");
+                    b.ToTable("BroadcasterHistory");
                 });
 
-            modelBuilder.Entity("TopTwitchClipBotModel.ChannelTopClipConfig", b =>
+            modelBuilder.Entity("TopTwitchClipBotModel.ChannelConfig", b =>
+                {
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("decimal(20,0)");
+
+                    b.Property<int?>("MaxPostingHour");
+
+                    b.Property<int?>("MinPostingHour");
+
+                    b.Property<string>("Prefix")
+                        .HasColumnType("varchar(4)");
+
+                    b.HasKey("ChannelId");
+
+                    b.ToTable("ChannelConfig");
+                });
+
+            modelBuilder.Entity("TopTwitchClipBotModel.BroadcasterConfig", b =>
                 {
                     b.HasOne("TopTwitchClipBotModel.ChannelConfig", "ChannelConfig")
-                        .WithMany("ChannelTopClipConfigs")
+                        .WithMany("BroadcasterConfigs")
                         .HasForeignKey("ChannelId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("TopTwitchClipBotModel.TopClipHistory", b =>
+            modelBuilder.Entity("TopTwitchClipBotModel.BroadcasterHistory", b =>
                 {
-                    b.HasOne("TopTwitchClipBotModel.ChannelTopClipConfig", "ChannelTopClipConfig")
-                        .WithMany("TopClipHistories")
-                        .HasForeignKey("ChannelTopClipConfigId")
+                    b.HasOne("TopTwitchClipBotModel.BroadcasterConfig", "BroadcasterConfig")
+                        .WithMany("BroadcasterHistories")
+                        .HasForeignKey("BroadcasterConfigId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

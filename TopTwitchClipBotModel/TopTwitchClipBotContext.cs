@@ -10,8 +10,8 @@ namespace TopTwitchClipBotModel
     public partial class TopTwitchClipBotContext : DbContext, ITopTwitchClipBotContext
     {
         public virtual DbSet<ChannelConfig> ChannelConfigs { get; set; }
-        public virtual DbSet<ChannelTopClipConfig> ChannelTopClipConfigs { get; set; }
-        public virtual DbSet<TopClipHistory> TopClipHistories { get; set; }
+        public virtual DbSet<BroadcasterConfig> BroadcasterConfigs { get; set; }
+        public virtual DbSet<BroadcasterHistory> BroadcasterHistories { get; set; }
         public TopTwitchClipBotContext() { }
         public TopTwitchClipBotContext(DbContextOptions<TopTwitchClipBotContext> options) : base(options) { }
         //TODO remove hardcoded command timeout
@@ -55,18 +55,18 @@ namespace TopTwitchClipBotModel
             await SaveChangesAsync();
             return new ChannelConfigContainer(channelConfig);
         }
-        public async Task<ChannelTopClipConfigContainer> SetChannelTopClipConfigAsync(decimal channelId, string broadcaster, ChannelTopClipConfigContainer container)
+        public async Task<BroadcasterConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
         {
-            var match = await ChannelTopClipConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId && s.Broadcaster == broadcaster);
-            ChannelTopClipConfig channelTopClipConfig;
+            var match = await BroadcasterConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId && s.Broadcaster == broadcaster);
+            BroadcasterConfig broadcasterConfig;
             if (match != null) //mutate it
             {
-                channelTopClipConfig = match;
-                channelTopClipConfig.NumberOfClipsPerDay = container.NumberOfClipsPerDay;
+                broadcasterConfig = match;
+                broadcasterConfig.NumberOfClipsPerDay = container.NumberOfClipsPerDay;
             }
             else
             {
-                channelTopClipConfig = new ChannelTopClipConfig
+                broadcasterConfig = new BroadcasterConfig
                 {
                     ChannelId = container.ChannelId,
                     Broadcaster = container.Broadcaster,
@@ -77,39 +77,39 @@ namespace TopTwitchClipBotModel
                 if (parent != null)
                 {
                     channelConfig = parent;
-                    channelConfig.ChannelTopClipConfigs.Add(channelTopClipConfig);
+                    channelConfig.BroadcasterConfigs.Add(broadcasterConfig);
                 }
                 else
                 {
-                    channelConfig = new ChannelConfig { ChannelId = channelId, ChannelTopClipConfigs = new List<ChannelTopClipConfig> { channelTopClipConfig } };
+                    channelConfig = new ChannelConfig { ChannelId = channelId, BroadcasterConfigs = new List<BroadcasterConfig> { broadcasterConfig } };
                     ChannelConfigs.Add(channelConfig);
                 }
             }
             await SaveChangesAsync();
-            return new ChannelTopClipConfigContainer(channelTopClipConfig);
+            return new BroadcasterConfigContainer(broadcasterConfig);
         }
-        public async Task<List<TopClipHistoryContainer>> InsertTopClipHistoriesAsync(List<TopClipHistoryContainer> containers)
+        public async Task<List<BroadcasterHistoryContainer>> InsertBroadcasterHistoriesAsync(List<BroadcasterHistoryContainer> containers)
         {
-            var topClipHistories = containers.Select(container => new TopClipHistory
+            var histories = containers.Select(container => new BroadcasterHistory
             {
-                ChannelTopClipConfigId = container.ChannelTopClipConfigId,
+                BroadcasterConfigId = container.BroadcasterConfigId,
                 ClipUrl = container.ClipUrl,
                 Slug = container.Slug,
                 Stamp = container.Stamp
             }).ToList();
-            TopClipHistories.AddRange(topClipHistories);
+            BroadcasterHistories.AddRange(histories);
             await SaveChangesAsync();
             return containers;
         }
-        public async Task<List<PendingChannelTopClipConfig>> GetChannelTopClipConfigsAsync()
+        public async Task<List<PendingBroadcasterConfig>> GetBroadcasterConfigsAsync()
         {
-            return await ChannelTopClipConfigs.Select(s => new PendingChannelTopClipConfig
+            return await BroadcasterConfigs.Select(s => new PendingBroadcasterConfig
             {
                 Id = s.Id,
                 ChannelId = s.ChannelId,
                 Broadcaster = s.Broadcaster,
                 NumberOfClipsPerDay = s.NumberOfClipsPerDay,
-                ExistingHistories = s.TopClipHistories.Select(t => new TopClipHistoryContainer(s.ChannelId, t)).ToList()
+                ExistingHistories = s.BroadcasterHistories.Select(t => new BroadcasterHistoryContainer(s.ChannelId, t)).ToList()
             }).ToListAsync();
         }
         public async Task DeleteChannelTopClipConfigAsync(decimal channelId)

@@ -71,13 +71,13 @@ namespace TopTwitchClipBotCore.Modules
         [Command(nameof(Of))]
         public async Task Of(string broadcaster, int? numberOfClipsPerDay = null)
         {
-            var container = new ChannelTopClipConfigContainer
+            var container = new BroadcasterConfigContainer
             {
                 ChannelId = Context.Channel.Id,
                 Broadcaster = broadcaster,
                 NumberOfClipsPerDay = numberOfClipsPerDay
             };
-            var result = await _FunctionWrapper.PostChannelTopClipConfigAsync(Context.Channel.Id, broadcaster, container);
+            var result = await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
             //TODO embed builder
             var serialized = JsonConvert.SerializeObject(result);
             await ReplyAsync(serialized);

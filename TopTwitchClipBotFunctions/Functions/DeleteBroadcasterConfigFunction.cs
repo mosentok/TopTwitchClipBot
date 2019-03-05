@@ -9,10 +9,10 @@ using TopTwitchClipBotModel;
 
 namespace TopTwitchClipBotFunctions.Functions
 {
-    public static class DeleteChannelTopClipConfigFunction
+    public static class DeleteBroadcasterConfigFunction
     {
-        [FunctionName(nameof(DeleteChannelTopClipConfigFunction))]
-        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "channels/{channelid:decimal}/topclips/{broadcaster?}")] HttpRequest req, decimal channelId, string broadcaster, ILogger log)
+        [FunctionName(nameof(DeleteBroadcasterConfigFunction))]
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "channels/{channelid:decimal}/broadcasters/{broadcaster?}")] HttpRequest req, decimal channelId, string broadcaster, ILogger log)
         {
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
             using (var context = new TopTwitchClipBotContext(connectionString))

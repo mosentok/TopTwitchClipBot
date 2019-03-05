@@ -4,11 +4,11 @@ namespace TopTwitchClipBotFunctions.Models
 {
     public class PendingClipContainer
     {
-        public PendingChannelTopClipConfig PendingChannelTopClipConfig { get; set; }
+        public PendingBroadcasterConfig PendingBroadcasterConfig { get; set; }
         public GetClipsResponse GetClipsResponse { get; set; }
-        public PendingClipContainer(PendingChannelTopClipConfig pendingChannelTopClipConfig, GetClipsResponse getClipsResponse)
+        public PendingClipContainer(PendingBroadcasterConfig pendingBroadcasterConfig, GetClipsResponse getClipsResponse)
         {
-            PendingChannelTopClipConfig = pendingChannelTopClipConfig;
+            PendingBroadcasterConfig = pendingBroadcasterConfig;
             GetClipsResponse = getClipsResponse;
         }
     }

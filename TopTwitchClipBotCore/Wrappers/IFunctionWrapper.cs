@@ -7,7 +7,7 @@ namespace TopTwitchClipBotCore.Wrappers
     {
         Task<ChannelConfigContainer> GetChannelConfigAsync(decimal channelId);
         Task<ChannelConfigContainer> PostChannelConfigAsync(decimal channelId, ChannelConfigContainer container);
-        Task<ChannelTopClipConfigContainer> PostChannelTopClipConfigAsync(decimal channelId, string broadcaster, ChannelTopClipConfigContainer container);
+        Task<BroadcasterConfigContainer> PostBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container);
         Task DeleteChannelTopClipConfigAsync(decimal channelId);
         Task DeleteChannelTopClipConfigAsync(decimal channelId, string broadcaster);
     }

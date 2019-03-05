@@ -10,7 +10,7 @@ using TopTwitchClipBotModel;
 namespace TopTwitchClipBotModel.Migrations
 {
     [DbContext(typeof(TopTwitchClipBotContext))]
-    [Migration("20190305172814_InitialAdd")]
+    [Migration("20190305184613_InitialAdd")]
     partial class InitialAdd
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,6 +20,50 @@ namespace TopTwitchClipBotModel.Migrations
                 .HasAnnotation("ProductVersion", "2.2.2-servicing-10034")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("TopTwitchClipBotModel.BroadcasterConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Broadcaster")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("decimal(20,0)");
+
+                    b.Property<int?>("NumberOfClipsPerDay");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChannelId");
+
+                    b.ToTable("BroadcasterConfig");
+                });
+
+            modelBuilder.Entity("TopTwitchClipBotModel.BroadcasterHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("BroadcasterConfigId");
+
+                    b.Property<string>("ClipUrl")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Slug")
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("Stamp");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BroadcasterConfigId");
+
+                    b.ToTable("BroadcasterHistory");
+                });
 
             modelBuilder.Entity("TopTwitchClipBotModel.ChannelConfig", b =>
                 {
@@ -38,63 +82,19 @@ namespace TopTwitchClipBotModel.Migrations
                     b.ToTable("ChannelConfig");
                 });
 
-            modelBuilder.Entity("TopTwitchClipBotModel.ChannelTopClipConfig", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Broadcaster")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<decimal>("ChannelId")
-                        .HasColumnType("decimal(20,0)");
-
-                    b.Property<int?>("NumberOfClipsPerDay");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChannelId");
-
-                    b.ToTable("ChannelTopClipConfig");
-                });
-
-            modelBuilder.Entity("TopTwitchClipBotModel.TopClipHistory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("ChannelTopClipConfigId");
-
-                    b.Property<string>("ClipUrl")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("Slug")
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<DateTime>("Stamp");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChannelTopClipConfigId");
-
-                    b.ToTable("TopClipHistory");
-                });
-
-            modelBuilder.Entity("TopTwitchClipBotModel.ChannelTopClipConfig", b =>
+            modelBuilder.Entity("TopTwitchClipBotModel.BroadcasterConfig", b =>
                 {
                     b.HasOne("TopTwitchClipBotModel.ChannelConfig", "ChannelConfig")
-                        .WithMany("ChannelTopClipConfigs")
+                        .WithMany("BroadcasterConfigs")
                         .HasForeignKey("ChannelId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("TopTwitchClipBotModel.TopClipHistory", b =>
+            modelBuilder.Entity("TopTwitchClipBotModel.BroadcasterHistory", b =>
                 {
-                    b.HasOne("TopTwitchClipBotModel.ChannelTopClipConfig", "ChannelTopClipConfig")
-                        .WithMany("TopClipHistories")
-                        .HasForeignKey("ChannelTopClipConfigId")
+                    b.HasOne("TopTwitchClipBotModel.BroadcasterConfig", "BroadcasterConfig")
+                        .WithMany("BroadcasterHistories")
+                        .HasForeignKey("BroadcasterConfigId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

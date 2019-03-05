@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TopTwitchClipBotModel
 {
-    public class ChannelTopClipConfig
+    public class BroadcasterConfig
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
@@ -16,6 +16,6 @@ namespace TopTwitchClipBotModel
         public string Broadcaster { get; set; }
         public int? NumberOfClipsPerDay { get; set; }
         public virtual ChannelConfig ChannelConfig { get; set; }
-        public virtual ICollection<TopClipHistory> TopClipHistories { get; set; }
+        public virtual ICollection<BroadcasterHistory> BroadcasterHistories { get; set; }
     }
 }
