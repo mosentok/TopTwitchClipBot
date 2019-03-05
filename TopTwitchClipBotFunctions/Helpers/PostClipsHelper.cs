@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,19 +11,22 @@ namespace TopTwitchClipBotFunctions.Helpers
 {
     public class PostClipsHelper
     {
-        public ITwitchWrapper TwitchWrapper { get; set; }
-        public IDiscordWrapper DiscordWrapper { get; set; }
-        public ITopTwitchClipBotContext Context { get; set; }
-        public PostClipsHelper(ITwitchWrapper twitchWrapper, IDiscordWrapper discordWrapper, ITopTwitchClipBotContext context)
+        readonly ITwitchWrapper _TwitchWrapper;
+        readonly IDiscordWrapper _DiscordWrapper;
+        readonly ITopTwitchClipBotContext _Context;
+        readonly ILogger _Log;
+        public PostClipsHelper(ITwitchWrapper twitchWrapper, IDiscordWrapper discordWrapper, ITopTwitchClipBotContext context, ILogger log)
         {
-            TwitchWrapper = twitchWrapper;
-            DiscordWrapper = discordWrapper;
-            Context = context;
+            _TwitchWrapper = twitchWrapper;
+            _DiscordWrapper = discordWrapper;
+            _Context = context;
+            _Log = log;
         }
         public async Task PostClips(string topClipsEndpoint, string clientId, string accept, DateTime yesterday)
         {
-            await DiscordWrapper.LogInAsync();
-            var containers = await Context.GetBroadcasterConfigsAsync();
+            _Log.LogInformation("Posting clips.");
+            await _DiscordWrapper.LogInAsync();
+            var containers = await _Context.GetBroadcasterConfigsAsync();
             var containersReadyToPost = containers.Where(s => IsReadyToPost(s, yesterday)).ToList();
             var pendingClipContainers = await BuildClipContainers(topClipsEndpoint, clientId, accept, containersReadyToPost);
             var insertedHistories = await InsertHistories(pendingClipContainers);
@@ -30,7 +34,8 @@ namespace TopTwitchClipBotFunctions.Helpers
             foreach (var channelContainer in channelContainers)
                 foreach (var history in channelContainer.BroadcasterHistoryContainers)
                     await channelContainer.Channel.SendMessageAsync(history.ClipUrl);
-            await DiscordWrapper.LogOutAsync();
+            _Log.LogInformation("Posted clips.");
+            await _DiscordWrapper.LogOutAsync();
         }
         bool IsReadyToPost(PendingBroadcasterConfig config, DateTime yesterday)
         {
@@ -50,7 +55,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                 else
                 {
                     var channelEndpoint = $"{topClipsEndpoint}&channel={container.Broadcaster}";
-                    var response = await TwitchWrapper.GetClips(channelEndpoint, clientId, accept);
+                    var response = await _TwitchWrapper.GetClips(channelEndpoint, clientId, accept);
                     var pendingClipContainer = new PendingClipContainer(container, response);
                     pendingClipContainers.Add(pendingClipContainer);
                     clipsCache.Add(container.Broadcaster, response);
@@ -76,7 +81,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                     historyContainers.Add(historyContainer);
                 }
             }
-            return await Context.InsertBroadcasterHistoriesAsync(historyContainers);
+            return await _Context.InsertBroadcasterHistoriesAsync(historyContainers);
         }
         async Task<List<ChannelContainer>> BuildChannelContainers(List<BroadcasterHistoryContainer> insertedHistories)
         {
@@ -84,7 +89,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             var channelContainers = new List<ChannelContainer>();
             foreach (var historyGroup in groupedHistories)
             {
-                var channel = await DiscordWrapper.GetChannelAsync(historyGroup.Key);
+                var channel = await _DiscordWrapper.GetChannelAsync(historyGroup.Key);
                 var channelContainer = new ChannelContainer(historyGroup.ToList(), channel);
                 channelContainers.Add(channelContainer);
             }

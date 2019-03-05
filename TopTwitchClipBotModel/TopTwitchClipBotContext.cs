@@ -112,11 +112,11 @@ namespace TopTwitchClipBotModel
                 ExistingHistories = s.BroadcasterHistories.Select(t => new BroadcasterHistoryContainer(s.ChannelId, t)).ToList()
             }).ToListAsync();
         }
-        public async Task DeleteChannelTopClipConfigAsync(decimal channelId)
+        public async Task DeleteBroadcasterConfigAsync(decimal channelId)
         {
             await Database.ExecuteSqlCommandAsync($"DELETE FROM ChannelTopClipConfig WHERE ChannelId = {channelId}");
         }
-        public async Task DeleteChannelTopClipConfigAsync(decimal channelId, string broadcaster)
+        public async Task DeleteBroadcasterConfigAsync(decimal channelId, string broadcaster)
         {
             await Database.ExecuteSqlCommandAsync($"DELETE FROM ChannelTopClipConfig WHERE ChannelId = {channelId} AND Broadcaster = {broadcaster}");
         }

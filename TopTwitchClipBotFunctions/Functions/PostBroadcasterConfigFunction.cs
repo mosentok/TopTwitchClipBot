@@ -15,11 +15,13 @@ namespace TopTwitchClipBotFunctions.Functions
         [FunctionName(nameof(PostBroadcasterConfigFunction))]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "channels/{channelid:decimal}/broadcasters/{broadcaster}")] HttpRequest req, decimal channelId, string broadcaster, ILogger log)
         {
+            log.LogInformation($"Posting broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'.");
             var container = await req.Body.ReadToEndAsync<BroadcasterConfigContainer>();
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
             BroadcasterConfigContainer result;
             using (var context = new TopTwitchClipBotContext(connectionString))
                 result = await context.SetBroadcasterConfigAsync(channelId, broadcaster, container);
+            log.LogInformation($"Posted broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'.");
             return new OkObjectResult(result);
         }
     }

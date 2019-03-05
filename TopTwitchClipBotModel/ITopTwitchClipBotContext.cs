@@ -10,8 +10,8 @@ namespace TopTwitchClipBotModel
         DbSet<BroadcasterConfig> BroadcasterConfigs { get; set; }
         DbSet<BroadcasterHistory> BroadcasterHistories { get; set; }
 
-        Task DeleteChannelTopClipConfigAsync(decimal channelId);
-        Task DeleteChannelTopClipConfigAsync(decimal channelId, string broadcaster);
+        Task DeleteBroadcasterConfigAsync(decimal channelId);
+        Task DeleteBroadcasterConfigAsync(decimal channelId, string broadcaster);
         Task<ChannelConfigContainer> GetChannelConfigAsync(decimal channelId);
         Task<List<PendingBroadcasterConfig>> GetBroadcasterConfigsAsync();
         Task<List<BroadcasterHistoryContainer>> InsertBroadcasterHistoriesAsync(List<BroadcasterHistoryContainer> containers);
