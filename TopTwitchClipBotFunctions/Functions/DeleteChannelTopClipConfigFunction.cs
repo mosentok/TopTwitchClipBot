@@ -12,7 +12,7 @@ namespace TopTwitchClipBotFunctions.Functions
     public static class DeleteChannelTopClipConfigFunction
     {
         [FunctionName(nameof(DeleteChannelTopClipConfigFunction))]
-        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "channels/{channelid:decimal}/topclips/{broadcaster:string?}")] HttpRequest req, decimal channelId, string broadcaster, ILogger log)
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "channels/{channelid:decimal}/topclips/{broadcaster?}")] HttpRequest req, decimal channelId, string broadcaster, ILogger log)
         {
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
             using (var context = new TopTwitchClipBotContext(connectionString))

@@ -14,7 +14,7 @@ namespace TopTwitchClipBotFunctions.Functions
     public static class PostChannelTopClipConfigFunction
     {
         [FunctionName(nameof(PostChannelTopClipConfigFunction))]
-        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "channels/{channelid:decimal}/topclips/{broadcaster:string}")] HttpRequest req, decimal channelId, string broadcaster, ILogger log)
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "channels/{channelid:decimal}/topclips/{broadcaster}")] HttpRequest req, decimal channelId, string broadcaster, ILogger log)
         {
             var container = await req.Body.ReadToEndAsync<ChannelTopClipConfigContainer>();
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
