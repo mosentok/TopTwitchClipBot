@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,8 +13,8 @@ namespace TopTwitchClipBotFunctions.Helpers
         readonly ITwitchWrapper _TwitchWrapper;
         readonly IDiscordWrapper _DiscordWrapper;
         readonly ITopTwitchClipBotContext _Context;
-        readonly ILogger _Log;
-        public PostClipsHelper(ITwitchWrapper twitchWrapper, IDiscordWrapper discordWrapper, ITopTwitchClipBotContext context, ILogger log)
+        readonly ILoggerWrapper _Log;
+        public PostClipsHelper(ITwitchWrapper twitchWrapper, IDiscordWrapper discordWrapper, ITopTwitchClipBotContext context, ILoggerWrapper log)
         {
             _TwitchWrapper = twitchWrapper;
             _DiscordWrapper = discordWrapper;

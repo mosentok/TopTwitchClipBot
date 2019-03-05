@@ -19,11 +19,12 @@ namespace TopTwitchClipBotFunctions.Functions
             var botToken = Environment.GetEnvironmentVariable("BotToken");
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
             var yesterday = DateTime.Now.AddDays(-1);
+            var logWrapper = new LoggerWrapper(log);
             using (var twitchWrapper = new TwitchWrapper())
             using (var discordWrapper = new DiscordWrapper(botToken))
             using (var context = new TopTwitchClipBotContext(connectionString))
             {
-                var helper = new PostClipsHelper(twitchWrapper, discordWrapper, context, log);
+                var helper = new PostClipsHelper(twitchWrapper, discordWrapper, context, logWrapper);
                 await helper.PostClips(topClipsEndpoint, clientId, accept, yesterday);
             }
         }

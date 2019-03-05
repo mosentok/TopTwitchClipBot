@@ -6,6 +6,8 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using TopTwitchClipBotModel;
+using TopTwitchClipBotFunctions.Helpers;
+using TopTwitchClipBotFunctions.Wrappers;
 
 namespace TopTwitchClipBotFunctions.Functions
 {
@@ -14,12 +16,14 @@ namespace TopTwitchClipBotFunctions.Functions
         [FunctionName(nameof(GetChannelConfigFunction))]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", Route = "channels/{channelid:decimal}")] HttpRequest req, decimal channelId, ILogger log)
         {
-            log.LogInformation($"Getting channel config for channel '{channelId}'.");
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
+            var logWrapper = new LoggerWrapper(log);
             ChannelConfigContainer result;
             using (var context = new TopTwitchClipBotContext(connectionString))
-                result = await context.GetChannelConfigAsync(channelId);
-            log.LogInformation($"Got channel config for channel '{channelId}'.");
+            {
+                var helper = new GetChannelConfigHelper(logWrapper, context);
+                result = await helper.RunAsync(channelId);
+            }
             return new OkObjectResult(result);
         }
     }

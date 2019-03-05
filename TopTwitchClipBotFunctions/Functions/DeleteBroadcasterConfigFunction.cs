@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using TopTwitchClipBotModel;
+using TopTwitchClipBotFunctions.Helpers;
+using TopTwitchClipBotFunctions.Wrappers;
 
 namespace TopTwitchClipBotFunctions.Functions
 {
@@ -14,14 +16,13 @@ namespace TopTwitchClipBotFunctions.Functions
         [FunctionName(nameof(DeleteBroadcasterConfigFunction))]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "delete", Route = "channels/{channelid:decimal}/broadcasters/{broadcaster?}")] HttpRequest req, decimal channelId, string broadcaster, ILogger log)
         {
-            log.LogInformation($"Deleting broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'.");
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
+            var logWrapper = new LoggerWrapper(log);
             using (var context = new TopTwitchClipBotContext(connectionString))
-                if (string.IsNullOrEmpty(broadcaster))
-                    await context.DeleteBroadcasterConfigAsync(channelId);
-                else
-                    await context.DeleteBroadcasterConfigAsync(channelId, broadcaster);
-            log.LogInformation($"Deleted broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'.");
+            {
+                var helper = new DeleteBroadcasterConfigHelper(logWrapper, context);
+                await helper.RunAsync(channelId, broadcaster);
+            }
             return new NoContentResult();
         }
     }

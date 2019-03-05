@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using TopTwitchClipBotModel;
 using TopTwitchClipBotFunctions.Extensions;
+using TopTwitchClipBotFunctions.Helpers;
+using TopTwitchClipBotFunctions.Wrappers;
 
 namespace TopTwitchClipBotFunctions.Functions
 {
@@ -15,13 +17,15 @@ namespace TopTwitchClipBotFunctions.Functions
         [FunctionName(nameof(PostChannelConfigFunction))]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "channels/{channelid:decimal}")] HttpRequest req, decimal channelId, ILogger log)
         {
-            log.LogInformation($"Posting channel config for channel '{channelId}'.");
             var container = await req.Body.ReadToEndAsync<ChannelConfigContainer>();
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
+            var logWrapper = new LoggerWrapper(log);
             ChannelConfigContainer result;
             using (var context = new TopTwitchClipBotContext(connectionString))
+            {
+                var helper = new PostChannelConfigHelper(logWrapper, context);
                 result = await context.SetChannelConfigAsync(channelId, container);
-            log.LogInformation($"Posted channel config for channel '{channelId}'.");
+            }
             return new OkObjectResult(result);
         }
     }
