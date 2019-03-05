@@ -20,20 +20,30 @@ namespace TopTwitchClipBotFunctions.Functions
             var accept = Environment.GetEnvironmentVariable("TwitchAcceptHeaderValue");
             var botToken = Environment.GetEnvironmentVariable("BotToken");
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
+            var yesterday = DateTime.Now.AddDays(-1);
             using (var twitchWrapper = new TwitchWrapper())
             using (var discordWrapper = new DiscordWrapper(botToken))
             using (var context = new TopTwitchClipBotContext(connectionString))
-            {
-                await discordWrapper.LogInAsync();
-                var containers = await context.GetChannelTopClipConfigsAsync();
-                var pendingClipContainers = await BuildClipContainers(topClipsEndpoint, clientId, accept, twitchWrapper, containers);
-                var insertedHistories = await InsertHistories(context, pendingClipContainers);
-                var channelContainers = await BuildChannelContainers(discordWrapper, insertedHistories);
-                foreach (var channelContainer in channelContainers)
-                    foreach (var history in channelContainer.TopClipHistoryContainers)
-                        await channelContainer.Channel.SendMessageAsync(history.ClipUrl);
-                await discordWrapper.LogOutAsync();
-            }
+                await PostClips(topClipsEndpoint, clientId, accept, yesterday, twitchWrapper, discordWrapper, context);
+        }
+        static async Task PostClips(string topClipsEndpoint, string clientId, string accept, DateTime yesterday, TwitchWrapper twitchWrapper, DiscordWrapper discordWrapper, TopTwitchClipBotContext context)
+        {
+            await discordWrapper.LogInAsync();
+            var containers = await context.GetChannelTopClipConfigsAsync();
+            var containersReadyToPost = containers.Where(s => IsReadyToPost(s, yesterday)).ToList();
+            var pendingClipContainers = await BuildClipContainers(topClipsEndpoint, clientId, accept, twitchWrapper, containersReadyToPost);
+            var insertedHistories = await InsertHistories(context, pendingClipContainers);
+            var channelContainers = await BuildChannelContainers(discordWrapper, insertedHistories);
+            foreach (var channelContainer in channelContainers)
+                foreach (var history in channelContainer.TopClipHistoryContainers)
+                    await channelContainer.Channel.SendMessageAsync(history.ClipUrl);
+            await discordWrapper.LogOutAsync();
+        }
+        static bool IsReadyToPost(PendingChannelTopClipConfig config, DateTime yesterday)
+        {
+            var hasNoDailyCap = !config.NumberOfClipsPerDay.HasValue;
+            var isBelowDailyCap = config.ExistingHistories.Count(s => s.Stamp >= yesterday) < config.NumberOfClipsPerDay.Value;
+            return hasNoDailyCap || isBelowDailyCap;
         }
         static async Task<List<PendingClipContainer>> BuildClipContainers(string topClipsEndpoint, string clientId, string accept, TwitchWrapper twitchWrapper, List<PendingChannelTopClipConfig> containers)
         {
