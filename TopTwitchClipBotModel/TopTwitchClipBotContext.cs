@@ -29,7 +29,7 @@ namespace TopTwitchClipBotModel
             var match = await ChannelConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId);
             if (match != null)
                 return new ChannelConfigContainer(match);
-            return new ChannelConfigContainer { ChannelId = channelId };
+            return new ChannelConfigContainer { ChannelId = channelId, Broadcasters = new List<BroadcasterConfigContainer>() };
         }
         public async Task<ChannelConfigContainer> SetChannelConfigAsync(decimal channelId, ChannelConfigContainer container)
         {
