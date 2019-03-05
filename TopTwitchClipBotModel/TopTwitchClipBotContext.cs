@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TopTwitchClipBotModel
 {
-    public partial class TopTwitchClipBotContext : DbContext
+    public partial class TopTwitchClipBotContext : DbContext, ITopTwitchClipBotContext
     {
         public virtual DbSet<ChannelConfig> ChannelConfigs { get; set; }
         public virtual DbSet<ChannelTopClipConfig> ChannelTopClipConfigs { get; set; }
