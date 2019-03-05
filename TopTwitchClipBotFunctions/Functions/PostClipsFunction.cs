@@ -26,11 +26,12 @@ namespace TopTwitchClipBotFunctions.Functions
             {
                 await discordWrapper.LogInAsync();
                 var containers = await context.GetChannelTopClipConfigsAsync();
-                var clips = await BuildClipContainers(topClipsEndpoint, clientId, accept, twitchWrapper, containers);
-                var insertedHistories = await InsertHistories(context, clips);
-                var channels = await BuildChannelContainers(discordWrapper, insertedHistories);
-                foreach (var channel in channels)
-                    await channel.Channel.SendMessageAsync(channel.TopClipHistoryContainer.ClipUrl);
+                var pendingClipContainers = await BuildClipContainers(topClipsEndpoint, clientId, accept, twitchWrapper, containers);
+                var insertedHistories = await InsertHistories(context, pendingClipContainers);
+                var channelContainers = await BuildChannelContainers(discordWrapper, insertedHistories);
+                foreach (var channelContainer in channelContainers)
+                    foreach (var history in channelContainer.TopClipHistoryContainers)
+                        await channelContainer.Channel.SendMessageAsync(history.ClipUrl);
                 await discordWrapper.LogOutAsync();
             }
         }
@@ -54,17 +55,18 @@ namespace TopTwitchClipBotFunctions.Functions
                 }
             return pendingClipContainers;
         }
-        static async Task<List<TopClipHistoryContainer>> InsertHistories(TopTwitchClipBotContext context, List<PendingClipContainer> clipDictionary)
+        static async Task<List<TopClipHistoryContainer>> InsertHistories(TopTwitchClipBotContext context, List<PendingClipContainer> pendingClipContainers)
         {
             var historyContainers = new List<TopClipHistoryContainer>();
-            foreach (var clipContainer in clipDictionary)
+            foreach (var clipContainer in pendingClipContainers)
             {
-                var firstUnseenClip = clipContainer.GetClipsResponse.Clips.FirstOrDefault(t => !clipContainer.PendingChannelTopClipConfig.ExistingSlugs.Contains(t.Slug));
+                var firstUnseenClip = clipContainer.GetClipsResponse.Clips.FirstOrDefault(t => !clipContainer.PendingChannelTopClipConfig.ExistingHistories.Any(u => u.Slug == t.Slug));
                 if (firstUnseenClip != null)
                 {
                     var historyContainer = new TopClipHistoryContainer
                     {
                         ChannelId = clipContainer.PendingChannelTopClipConfig.ChannelId,
+                        ChannelTopClipConfigId = clipContainer.PendingChannelTopClipConfig.Id,
                         Slug = firstUnseenClip.Slug,
                         ClipUrl = firstUnseenClip.Url,
                         Stamp = DateTime.Now
@@ -76,11 +78,12 @@ namespace TopTwitchClipBotFunctions.Functions
         }
         static async Task<List<ChannelContainer>> BuildChannelContainers(DiscordWrapper discordWrapper, List<TopClipHistoryContainer> insertedHistories)
         {
+            var groupedHistories = insertedHistories.ToLookup(s => s.ChannelId);
             var channelContainers = new List<ChannelContainer>();
-            foreach (var history in insertedHistories)
+            foreach (var historyGroup in groupedHistories)
             {
-                var channel = await discordWrapper.GetChannelAsync(history.ChannelId);
-                var channelContainer = new ChannelContainer(history, channel);
+                var channel = await discordWrapper.GetChannelAsync(historyGroup.Key);
+                var channelContainer = new ChannelContainer(historyGroup.ToList(), channel);
                 channelContainers.Add(channelContainer);
             }
             return channelContainers;

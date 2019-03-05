@@ -69,7 +69,7 @@ namespace TopTwitchClipBotCore.Modules
             return success && 0 <= postingHour && postingHour <= 23;
         }
         [Command(nameof(Of))]
-        public async Task Of(string broadcaster, int? numberOfClipsPerDay)
+        public async Task Of(string broadcaster, int? numberOfClipsPerDay = null)
         {
             var container = new ChannelTopClipConfigContainer
             {

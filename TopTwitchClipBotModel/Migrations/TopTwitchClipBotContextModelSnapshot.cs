@@ -21,13 +21,15 @@ namespace TopTwitchClipBotModel.Migrations
 
             modelBuilder.Entity("TopTwitchClipBotModel.ChannelConfig", b =>
                 {
-                    b.Property<decimal>("ChannelId");
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("decimal(20,0)");
 
                     b.Property<int?>("MaxPostingHour");
 
                     b.Property<int?>("MinPostingHour");
 
-                    b.Property<string>("Prefix");
+                    b.Property<string>("Prefix")
+                        .HasColumnType("varchar(4)");
 
                     b.HasKey("ChannelId");
 
@@ -40,9 +42,11 @@ namespace TopTwitchClipBotModel.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Broadcaster");
+                    b.Property<string>("Broadcaster")
+                        .HasColumnType("varchar(50)");
 
-                    b.Property<decimal>("ChannelId");
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("decimal(20,0)");
 
                     b.Property<int?>("NumberOfClipsPerDay");
 
@@ -59,13 +63,13 @@ namespace TopTwitchClipBotModel.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<decimal>("ChannelId");
+                    b.Property<int>("ChannelTopClipConfigId");
 
-                    b.Property<int?>("ChannelTopClipConfigId");
+                    b.Property<string>("ClipUrl")
+                        .HasColumnType("varchar(255)");
 
-                    b.Property<string>("ClipUrl");
-
-                    b.Property<string>("Slug");
+                    b.Property<string>("Slug")
+                        .HasColumnType("varchar(100)");
 
                     b.Property<DateTime>("Stamp");
 
@@ -88,7 +92,8 @@ namespace TopTwitchClipBotModel.Migrations
                 {
                     b.HasOne("TopTwitchClipBotModel.ChannelTopClipConfig", "ChannelTopClipConfig")
                         .WithMany("TopClipHistories")
-                        .HasForeignKey("ChannelTopClipConfigId");
+                        .HasForeignKey("ChannelTopClipConfigId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

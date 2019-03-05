@@ -12,8 +12,8 @@ namespace TopTwitchClipBotModel.Migrations
                 name: "ChannelConfig",
                 columns: table => new
                 {
-                    ChannelId = table.Column<decimal>(nullable: false),
-                    Prefix = table.Column<string>(nullable: true),
+                    ChannelId = table.Column<decimal>(type: "decimal(20,0)", nullable: false),
+                    Prefix = table.Column<string>(type: "varchar(4)", nullable: true),
                     MinPostingHour = table.Column<int>(nullable: true),
                     MaxPostingHour = table.Column<int>(nullable: true)
                 },
@@ -28,8 +28,8 @@ namespace TopTwitchClipBotModel.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    ChannelId = table.Column<decimal>(nullable: false),
-                    Broadcaster = table.Column<string>(nullable: true),
+                    ChannelId = table.Column<decimal>(type: "decimal(20,0)", nullable: false),
+                    Broadcaster = table.Column<string>(type: "varchar(50)", nullable: true),
                     NumberOfClipsPerDay = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
@@ -49,11 +49,10 @@ namespace TopTwitchClipBotModel.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    ChannelId = table.Column<decimal>(nullable: false),
-                    Slug = table.Column<string>(nullable: true),
-                    ClipUrl = table.Column<string>(nullable: true),
-                    Stamp = table.Column<DateTime>(nullable: false),
-                    ChannelTopClipConfigId = table.Column<int>(nullable: true)
+                    ChannelTopClipConfigId = table.Column<int>(nullable: false),
+                    Slug = table.Column<string>(type: "varchar(100)", nullable: true),
+                    ClipUrl = table.Column<string>(type: "varchar(255)", nullable: true),
+                    Stamp = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -63,7 +62,7 @@ namespace TopTwitchClipBotModel.Migrations
                         column: x => x.ChannelTopClipConfigId,
                         principalTable: "ChannelTopClipConfig",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(

@@ -1,15 +1,16 @@
 ﻿using Discord;
+using System.Collections.Generic;
 using TopTwitchClipBotModel;
 
 namespace TopTwitchClipBotFunctions.Models
 {
     public class ChannelContainer
     {
-        public TopClipHistoryContainer TopClipHistoryContainer { get; set; }
+        public List<TopClipHistoryContainer> TopClipHistoryContainers { get; set; }
         public IMessageChannel Channel { get; set; }
-        public ChannelContainer(TopClipHistoryContainer topClipHistoryContainer, IMessageChannel channel)
+        public ChannelContainer(List<TopClipHistoryContainer> topClipHistoryContainers, IMessageChannel channel)
         {
-            TopClipHistoryContainer = topClipHistoryContainer;
+            TopClipHistoryContainers = topClipHistoryContainers;
             Channel = channel;
         }
     }

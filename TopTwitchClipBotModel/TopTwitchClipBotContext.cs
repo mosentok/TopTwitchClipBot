@@ -75,10 +75,15 @@ namespace TopTwitchClipBotModel
                 ChannelConfig channelConfig;
                 var parent = await ChannelConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId);
                 if (parent != null)
+                {
                     channelConfig = parent;
+                    channelConfig.ChannelTopClipConfigs.Add(channelTopClipConfig);
+                }
                 else
-                    channelConfig = new ChannelConfig { ChannelId = channelId, ChannelTopClipConfigs = new List<ChannelTopClipConfig>() };
-                channelConfig.ChannelTopClipConfigs.Add(channelTopClipConfig);
+                {
+                    channelConfig = new ChannelConfig { ChannelId = channelId, ChannelTopClipConfigs = new List<ChannelTopClipConfig> { channelTopClipConfig } };
+                    ChannelConfigs.Add(channelConfig);
+                }
             }
             await SaveChangesAsync();
             return new ChannelTopClipConfigContainer(channelTopClipConfig);
@@ -87,23 +92,24 @@ namespace TopTwitchClipBotModel
         {
             var topClipHistories = containers.Select(container => new TopClipHistory
             {
-                ChannelId = container.ChannelId,
+                ChannelTopClipConfigId = container.ChannelTopClipConfigId,
                 ClipUrl = container.ClipUrl,
                 Slug = container.Slug,
                 Stamp = container.Stamp
             }).ToList();
             TopClipHistories.AddRange(topClipHistories);
             await SaveChangesAsync();
-            return topClipHistories.Select(s => new TopClipHistoryContainer(s)).ToList();
+            return containers;
         }
         public async Task<List<PendingChannelTopClipConfig>> GetChannelTopClipConfigsAsync()
         {
             return await ChannelTopClipConfigs.Select(s => new PendingChannelTopClipConfig
             {
+                Id = s.Id,
                 ChannelId = s.ChannelId,
                 Broadcaster = s.Broadcaster,
                 NumberOfClipsPerDay = s.NumberOfClipsPerDay,
-                ExistingSlugs = s.TopClipHistories.Select(t => t.Slug).ToList()
+                ExistingHistories = s.TopClipHistories.Select(t => new TopClipHistoryContainer(s.ChannelId, t)).ToList()
             }).ToListAsync();
         }
         public async Task DeleteChannelTopClipConfigAsync(decimal channelId)

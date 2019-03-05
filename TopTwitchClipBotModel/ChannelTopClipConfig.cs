@@ -10,7 +10,9 @@ namespace TopTwitchClipBotModel
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public int Id { get; set; }
+        [Column(TypeName = "decimal(20,0)")]
         public decimal ChannelId { get; set; }
+        [Column(TypeName = "varchar(50)")]
         public string Broadcaster { get; set; }
         public int? NumberOfClipsPerDay { get; set; }
         public virtual ChannelConfig ChannelConfig { get; set; }
