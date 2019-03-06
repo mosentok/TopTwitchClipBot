@@ -27,10 +27,16 @@ namespace TopTwitchClipBotTests.Functions
             _DiscordWrapper = new Mock<IDiscordWrapper>();
             _Helper = new PostClipsHelper(_Log.Object, _Context.Object, _TwitchWrapper.Object, _DiscordWrapper.Object);
         }
+        [Test]
+        public void IsReadyToPost_NoCap()
+        {
+            var result = _Helper.IsReadyToPost(null, null, new DateTime());
+            Assert.That(result, Is.True);
+        }
         [TestCase("2019-02-13", "2019-02-12", false)]
         [TestCase("2019-02-13", "2019-02-13", false)]
         [TestCase("2019-02-13", "2019-02-11", true)]
-        public void IsReadyToPost(string nowString, string stampString, bool expectedResult)
+        public void IsReadyToPost_StampCheck(string nowString, string stampString, bool expectedResult)
         {
             var stamp = DateTime.Parse(stampString);
             var existingHistory = new BroadcasterHistoryContainer { Stamp = stamp };
