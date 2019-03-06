@@ -21,7 +21,7 @@ namespace TopTwitchClipBotTests.Functions
         }
         [TestCase(null)]
         [TestCase("")]
-        public async Task RunAsync_NullOrEmpty(string broadcaster)
+        public async Task DeleteBroadcasterConfigAsync_NullOrEmpty(string broadcaster)
         {
             const int channelId = 123;
             _Log.Setup(s => s.LogInformation($"Deleting broadcaster config for channel '{channelId}'."));
@@ -34,7 +34,7 @@ namespace TopTwitchClipBotTests.Functions
             Assert.That(task.IsCompletedSuccessfully, Is.True);
         }
         [Test]
-        public async Task RunAsync()
+        public async Task DeleteBroadcasterConfigAsync()
         {
             const int channelId = 123;
             const string broadcaster = "broadcaster";

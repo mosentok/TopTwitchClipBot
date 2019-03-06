@@ -21,7 +21,7 @@ namespace TopTwitchClipBotTests.Functions
             _Helper = new PostChannelConfigHelper(_Log.Object, _Context.Object);
         }
         [Test]
-        public async Task RunAsync()
+        public async Task PostChannelConfigAsync()
         {
             const int channelId = 123;
             _Log.Setup(s => s.LogInformation($"Posting channel config for channel '{channelId}'."));

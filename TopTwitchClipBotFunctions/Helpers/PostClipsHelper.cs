@@ -21,27 +21,14 @@ namespace TopTwitchClipBotFunctions.Helpers
             _Context = context;
             _Log = log;
         }
-        public async Task PostClipsAsync(string topClipsEndpoint, string clientId, string accept, DateTime yesterday)
+        public bool IsReadyToPost(int? numberOfClipsPerDay, List<BroadcasterHistoryContainer> existingHistories, DateTime yesterday)
         {
-            _Log.LogInformation("Posting clips.");
-            await _DiscordWrapper.LogInAsync();
-            var containers = await _Context.GetBroadcasterConfigsAsync();
-            var containersReadyToPost = containers.Where(s => IsReadyToPost(s, yesterday)).ToList();
-            var pendingClipContainers = await BuildClipContainers(topClipsEndpoint, clientId, accept, containersReadyToPost);
-            var insertedHistories = await InsertHistories(pendingClipContainers);
-            var channelContainers = await BuildChannelContainers(insertedHistories);
-            foreach (var channelContainer in channelContainers)
-                foreach (var history in channelContainer.BroadcasterHistoryContainers)
-                    await channelContainer.Channel.SendMessageAsync(history.ClipUrl);
-            await _DiscordWrapper.LogOutAsync();
-            _Log.LogInformation("Posted clips.");
+            if (!numberOfClipsPerDay.HasValue) //no cap
+                return true;
+            var numberOfClipsSeenInTheLastDay = existingHistories.Count(s => s.Stamp >= yesterday);
+            return numberOfClipsSeenInTheLastDay < numberOfClipsPerDay.Value; //is below cap
         }
-        bool IsReadyToPost(PendingBroadcasterConfig config, DateTime yesterday)
-        {
-            return !config.NumberOfClipsPerDay.HasValue || //no cap, or
-                config.ExistingHistories.Count(s => s.Stamp >= yesterday) < config.NumberOfClipsPerDay; //is below cap
-        }
-        async Task<List<PendingClipContainer>> BuildClipContainers(string topClipsEndpoint, string clientId, string accept, List<PendingBroadcasterConfig> containers)
+        public async Task<List<PendingClipContainer>> BuildClipContainers(string topClipsEndpoint, string clientId, string accept, List<PendingBroadcasterConfig> containers)
         {
             var pendingClipContainers = new List<PendingClipContainer>();
             var clipsCache = new Dictionary<string, GetClipsResponse>();
@@ -61,7 +48,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                 }
             return pendingClipContainers;
         }
-        async Task<List<BroadcasterHistoryContainer>> InsertHistories(List<PendingClipContainer> pendingClipContainers)
+        public async Task<List<BroadcasterHistoryContainer>> InsertHistories(List<PendingClipContainer> pendingClipContainers)
         {
             var historyContainers = new List<BroadcasterHistoryContainer>();
             foreach (var clipContainer in pendingClipContainers)
@@ -82,7 +69,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             }
             return await _Context.InsertBroadcasterHistoriesAsync(historyContainers);
         }
-        async Task<List<ChannelContainer>> BuildChannelContainers(List<BroadcasterHistoryContainer> insertedHistories)
+        public async Task<List<ChannelContainer>> BuildChannelContainers(List<BroadcasterHistoryContainer> insertedHistories)
         {
             var groupedHistories = insertedHistories.ToLookup(s => s.ChannelId);
             var channelContainers = new List<ChannelContainer>();

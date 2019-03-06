@@ -21,7 +21,7 @@ namespace TopTwitchClipBotTests.Functions
             _Helper = new PostBroadcasterConfigHelper(_Log.Object, _Context.Object);
         }
         [Test]
-        public async Task RunAsync()
+        public async Task PostBroadcasterConfigAsync()
         {
             const int channelId = 123;
             const string broadcaster = "broadcaster";

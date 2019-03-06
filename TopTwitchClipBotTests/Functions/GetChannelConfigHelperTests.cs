@@ -21,7 +21,7 @@ namespace TopTwitchClipBotTests.Functions
             _Helper = new GetChannelConfigHelper(_Log.Object, _Context.Object);
         }
         [Test]
-        public async Task RunAsync()
+        public async Task GetChannelConfigAsync()
         {
             const int channelId = 123;
             _Log.Setup(s => s.LogInformation($"Getting channel config for channel '{channelId}'."));
