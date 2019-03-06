@@ -1,0 +1,34 @@
+# ASP.NET Core
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- master
+
+pool:
+  vmImage: 'Ubuntu-16.04'
+
+variables:
+  buildConfiguration: 'Debug'
+
+steps:
+- script: dotnet build $(Build.SourcesDirectory)/TopTwitchClipBot/TopTwitchClipBot.sln --configuration $(buildConfiguration)
+  displayName: 'dotnet build $(buildConfiguration)'
+- script: dotnet test $(Build.SourcesDirectory)/TopTwitchClipBot/TopTwitchClipBotTests/TopTwitchClipBotTests.csproj --no-build --no-restore --logger:trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[TopTwitchClipBotModel]*%2c[TopTwitchClipBotFunctions]TopTwitchClipBotFunctions.Models*%2c[TopTwitchClipBotFunctions]TopTwitchClipBotFunctions.Wrappers*%2c[TopTwitchClipBotFunctions]TopTwitchClipBotFunctions.Extensions*%2c[TopTwitchClipBotFunctions]TopTwitchClipBotFunctions.Functions*%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Exceptions*%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Extensions*%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Wrappers*" /p:CoverletOutput=./TestResults/coverage.cobertura.xml
+  displayName: 'dotnet test $(buildConfiguration)'
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testRunner: VSTest
+    testResultsFiles: '**/*.trx'
+  displayName: 'publish test results'
+- script: dotnet reportgenerator -reports:./TestResults/coverage.cobertura.xml -reportTypes:htmlInline_azurePipelines_dark -targetdir:./TestResults
+  workingDirectory: $(Build.SourcesDirectory)/TopTwitchClipBot/TopTwitchClipBotTests
+  displayName: 'generate coverage report'
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: Cobertura
+    summaryFileLocation: $(Build.SourcesDirectory)/TopTwitchClipBot/TopTwitchClipBotTests/TestResults/coverage.cobertura.xml
+    reportDirectory: $(Build.SourcesDirectory)/TopTwitchClipBot/TopTwitchClipBotTests/TestResults
+  displayName: 'publish code coverage'
