@@ -14,14 +14,14 @@ namespace TopTwitchClipBotFunctions.Helpers
         readonly IDiscordWrapper _DiscordWrapper;
         readonly ITopTwitchClipBotContext _Context;
         readonly ILoggerWrapper _Log;
-        public PostClipsHelper(ITwitchWrapper twitchWrapper, IDiscordWrapper discordWrapper, ITopTwitchClipBotContext context, ILoggerWrapper log)
+        public PostClipsHelper(ILoggerWrapper log, ITopTwitchClipBotContext context, ITwitchWrapper twitchWrapper, IDiscordWrapper discordWrapper)
         {
             _TwitchWrapper = twitchWrapper;
             _DiscordWrapper = discordWrapper;
             _Context = context;
             _Log = log;
         }
-        public async Task PostClips(string topClipsEndpoint, string clientId, string accept, DateTime yesterday)
+        public async Task PostClipsAsync(string topClipsEndpoint, string clientId, string accept, DateTime yesterday)
         {
             _Log.LogInformation("Posting clips.");
             await _DiscordWrapper.LogInAsync();
@@ -33,8 +33,8 @@ namespace TopTwitchClipBotFunctions.Helpers
             foreach (var channelContainer in channelContainers)
                 foreach (var history in channelContainer.BroadcasterHistoryContainers)
                     await channelContainer.Channel.SendMessageAsync(history.ClipUrl);
-            _Log.LogInformation("Posted clips.");
             await _DiscordWrapper.LogOutAsync();
+            _Log.LogInformation("Posted clips.");
         }
         bool IsReadyToPost(PendingBroadcasterConfig config, DateTime yesterday)
         {

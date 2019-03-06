@@ -13,7 +13,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             _Log = log;
             _Context = context;
         }
-        public async Task<BroadcasterConfigContainer> RunAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
+        public async Task<BroadcasterConfigContainer> PostBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
         {
             _Log.LogInformation($"Posting broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'.");
             var result = await _Context.SetBroadcasterConfigAsync(channelId, broadcaster, container);

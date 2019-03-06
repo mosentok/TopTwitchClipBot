@@ -22,7 +22,7 @@ namespace TopTwitchClipBotFunctions.Functions
             using (var context = new TopTwitchClipBotContext(connectionString))
             {
                 var helper = new GetChannelConfigHelper(logWrapper, context);
-                result = await helper.RunAsync(channelId);
+                result = await helper.GetChannelConfigAsync(channelId);
             }
             return new OkObjectResult(result);
         }

@@ -24,7 +24,7 @@ namespace TopTwitchClipBotFunctions.Functions
             using (var context = new TopTwitchClipBotContext(connectionString))
             {
                 var helper = new PostChannelConfigHelper(logWrapper, context);
-                result = await context.SetChannelConfigAsync(channelId, container);
+                result = await helper.PostChannelConfigAsync(channelId, container);
             }
             return new OkObjectResult(result);
         }

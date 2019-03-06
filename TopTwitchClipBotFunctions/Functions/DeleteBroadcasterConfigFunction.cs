@@ -21,7 +21,7 @@ namespace TopTwitchClipBotFunctions.Functions
             using (var context = new TopTwitchClipBotContext(connectionString))
             {
                 var helper = new DeleteBroadcasterConfigHelper(logWrapper, context);
-                await helper.RunAsync(channelId, broadcaster);
+                await helper.DeleteBroadcasterConfigAsync(channelId, broadcaster);
             }
             return new NoContentResult();
         }

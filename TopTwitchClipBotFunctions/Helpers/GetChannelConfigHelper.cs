@@ -13,7 +13,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             _Log = log;
             _Context = context;
         }
-        public async Task<ChannelConfigContainer> RunAsync(decimal channelId)
+        public async Task<ChannelConfigContainer> GetChannelConfigAsync(decimal channelId)
         {
             _Log.LogInformation($"Getting channel config for channel '{channelId}'.");
             var result = await _Context.GetChannelConfigAsync(channelId);

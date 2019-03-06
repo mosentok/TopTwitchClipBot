@@ -13,7 +13,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             _Log = log;
             _Context = context;
         }
-        public async Task RunAsync(decimal channelId, string broadcaster)
+        public async Task DeleteBroadcasterConfigAsync(decimal channelId, string broadcaster)
         {
             if (string.IsNullOrEmpty(broadcaster))
             {

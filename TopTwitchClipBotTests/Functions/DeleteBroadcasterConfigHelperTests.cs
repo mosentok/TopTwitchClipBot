@@ -27,12 +27,13 @@ namespace TopTwitchClipBotTests.Functions
             _Log.Setup(s => s.LogInformation($"Deleting broadcaster config for channel '{channelId}'."));
             _Context.Setup(s => s.DeleteBroadcasterConfigAsync(channelId)).Returns(Task.CompletedTask);
             _Log.Setup(s => s.LogInformation($"Deleted broadcaster config for channel '{channelId}'."));
-            var task = _Helper.RunAsync(channelId, broadcaster);
+            var task = _Helper.DeleteBroadcasterConfigAsync(channelId, broadcaster);
             await task;
             _Log.VerifyAll();
             _Context.VerifyAll();
             Assert.That(task.IsCompletedSuccessfully, Is.True);
         }
+        [Test]
         public async Task RunAsync()
         {
             const int channelId = 123;
@@ -40,7 +41,7 @@ namespace TopTwitchClipBotTests.Functions
             _Log.Setup(s => s.LogInformation($"Deleting broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'."));
             _Context.Setup(s => s.DeleteBroadcasterConfigAsync(channelId, broadcaster)).Returns(Task.CompletedTask);
             _Log.Setup(s => s.LogInformation($"Deleted broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'."));
-            var task = _Helper.RunAsync(channelId, broadcaster);
+            var task = _Helper.DeleteBroadcasterConfigAsync(channelId, broadcaster);
             await task;
             _Log.VerifyAll();
             _Context.VerifyAll();

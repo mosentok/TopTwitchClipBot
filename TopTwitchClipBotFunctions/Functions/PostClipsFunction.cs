@@ -24,8 +24,8 @@ namespace TopTwitchClipBotFunctions.Functions
             using (var discordWrapper = new DiscordWrapper(botToken))
             using (var context = new TopTwitchClipBotContext(connectionString))
             {
-                var helper = new PostClipsHelper(twitchWrapper, discordWrapper, context, logWrapper);
-                await helper.PostClips(topClipsEndpoint, clientId, accept, yesterday);
+                var helper = new PostClipsHelper(logWrapper, context, twitchWrapper, discordWrapper);
+                await helper.PostClipsAsync(topClipsEndpoint, clientId, accept, yesterday);
             }
         }
     }
