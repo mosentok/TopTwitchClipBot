@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TopTwitchClipBotCore\TopTwitchClipBotCore.csproj" />
     <ProjectReference Include="..\TopTwitchClipBotFunctions\TopTwitchClipBotFunctions.csproj" />
   </ItemGroup>
 
