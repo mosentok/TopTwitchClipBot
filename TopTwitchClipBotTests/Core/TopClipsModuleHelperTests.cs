@@ -77,6 +77,31 @@ namespace TopTwitchClipBotTests.Core
             Assert.That(result, Is.EqualTo(expectedResult));
         }
         [Test]
+        public void BuildStreamersText_SomeStreamers()
+        {
+            var broadcaster1 = new BroadcasterConfigContainer { Broadcaster = "broadcaster123" };
+            var broadcaster2 = new BroadcasterConfigContainer { Broadcaster = "anotherstreamer", NumberOfClipsPerDay = 4 };
+            var broadcaster3 = new BroadcasterConfigContainer { Broadcaster = "omegalulmydude" };
+            var broadcaster4 = new BroadcasterConfigContainer { Broadcaster = "zzzzzzzzzzz", NumberOfClipsPerDay = 2 };
+            var broadcasters = new List<BroadcasterConfigContainer> { broadcaster1, broadcaster2, broadcaster3, broadcaster4 };
+            var container = new ChannelConfigContainer { Broadcasters = broadcasters };
+            const string streamersBegin = "here's your list of streamers";
+            _ConfigWrapper.Setup(s => s["StreamersFieldBeginText"]).Returns(streamersBegin);
+            const string newLineDelimiter = "NEWLINE";
+            _ConfigWrapper.Setup(s => s["NewLineDelimiter"]).Returns(newLineDelimiter);
+            var streamerFormats = new List<string> { "```lessNEWLINE{0}```", "```diffNEWLINE{0}```", "```fixNEWLINE{0}```" };
+            _ConfigWrapper.Setup(s => s.Get<List<string>>("StreamersFormats")).Returns(streamerFormats);
+            var result = _TopClipsModuleHelper.BuildStreamersText(container);
+            _ConfigWrapper.VerifyAll();
+            const string expectedResult =
+                "here's your list of streamers" +
+                "```less\nanotherstreamer, 4 clips per day```" +
+                "```diff\nbroadcaster123, no limit```" +
+                "```fix\nomegalulmydude, no limit```" +
+                "```less\nzzzzzzzzzzz, 2 clips per day```";
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
+        [Test]
         public void BuildChannelConfigEmbed()
         {
             const string channelName = "our channel name";
