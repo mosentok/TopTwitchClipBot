@@ -30,6 +30,17 @@ namespace TopTwitchClipBotTests.Core
             Assert.That(result, Is.EqualTo(expectedResult));
             Assert.That(split.Length, Is.EqualTo(expectedLength));
         }
+        [TestCase("0", 0, true)]
+        [TestCase("1", 1, true)]
+        [TestCase("23", 23, true)]
+        [TestCase("24", 24, false)]
+        [TestCase("asdf", 0, false)]
+        public void IsInRange(string postingHourString, int expectedPostingHour, bool expectedResult)
+        {
+            var result = _TopClipsModuleHelper.IsInRange(postingHourString, out var postingHour);
+            Assert.That(postingHour, Is.EqualTo(expectedPostingHour));
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
         [TestCase("all", true)]
         [TestCase("all broadcasters", true)]
         [TestCase("asdf", false)]
