@@ -1,31 +1,16 @@
-﻿using Moq;
-using NUnit.Framework;
-using System.Threading.Tasks;
+﻿using NUnit.Framework;
 using TopTwitchClipBotCore.Helpers;
-using TopTwitchClipBotCore.Wrappers;
-using TopTwitchClipBotModel;
 
 namespace TopTwitchClipBotTests.Core
 {
     [TestFixture]
     public class TopClipsModuleHelperTests
     {
-        Mock<IFunctionWrapper> _FunctionWrapper;
         TopClipsModuleHelper _TopClipsModuleHelper;
         [SetUp]
         public void SetUp()
         {
-            _FunctionWrapper = new Mock<IFunctionWrapper>();
-            _TopClipsModuleHelper = new TopClipsModuleHelper(_FunctionWrapper.Object);
-        }
-        [Test]
-        public async Task GetAsync()
-        {
-            const int channelId = 123;
-            var container = new ChannelConfigContainer();
-            _FunctionWrapper.Setup(s => s.GetChannelConfigAsync(channelId)).ReturnsAsync(container);
-            var result = await _TopClipsModuleHelper.GetAsync(channelId);
-            Assert.That(result, Is.EqualTo(container));
+            _TopClipsModuleHelper = new TopClipsModuleHelper();
         }
         [TestCase("Off", true)]
         [TestCase("off", true)]
@@ -44,6 +29,14 @@ namespace TopTwitchClipBotTests.Core
             var result = _TopClipsModuleHelper.IsCorrectBetweenLength(input, out var split);
             Assert.That(result, Is.EqualTo(expectedResult));
             Assert.That(split.Length, Is.EqualTo(expectedLength));
+        }
+        [TestCase("all", true)]
+        [TestCase("all broadcasters", true)]
+        [TestCase("asdf", false)]
+        public void ShouldDeleteAll(string broadcaster, bool expectedResult)
+        {
+            var result = _TopClipsModuleHelper.ShouldDeleteAll(broadcaster);
+            Assert.That(result, Is.EqualTo(expectedResult));
         }
     }
 }

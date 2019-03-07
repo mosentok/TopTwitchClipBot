@@ -1,10 +1,9 @@
-﻿using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
 using System.IO;
 using System.Threading.Tasks;
+using TopTwitchClipBotCore.Helpers;
 using TopTwitchClipBotCore.Wrappers;
 
 namespace TopTwitchClipBotCore
@@ -25,6 +24,7 @@ namespace TopTwitchClipBotCore
                     .AddSingleton<IDiscordWrapper>(discordWrapper)
                     .AddSingleton<IConfigurationWrapper>(configWrapper)
                     .AddSingleton<IFunctionWrapper>(functionWrapper)
+                    .AddSingleton<ITopClipsModuleHelper>()
                     .AddLogging(s => s.AddConsole())
                     .BuildServiceProvider())
             {
