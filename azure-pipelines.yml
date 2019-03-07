@@ -11,36 +11,36 @@ pool:
 
 steps:
 - script: dotnet build $(Build.SourcesDirectory)/TopTwitchClipBot.sln --configuration Debug
-  displayName: 'Build in Debug Mode'
+  displayName: "Build in Debug Mode"
 - script: dotnet test $(Build.SourcesDirectory)/TopTwitchClipBotTests/TopTwitchClipBotTests.csproj --no-build --no-restore --logger:trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[TopTwitchClipBotModel]*%2c[TopTwitchClipBotTests]*%2c[TopTwitchClipBotFunctions]TopTwitchClipBotFunctions.Models*%2c[TopTwitchClipBotFunctions]TopTwitchClipBotFunctions.Wrappers*%2c[TopTwitchClipBotFunctions]TopTwitchClipBotFunctions.Extensions*%2c[TopTwitchClipBotFunctions]TopTwitchClipBotFunctions.Functions*%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Exceptions*%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Extensions*%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Models*%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Modules*%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Wrappers*%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Program%2c[TopTwitchClipBotCore]TopTwitchClipBotCore.Bot" /p:CoverletOutput=./TestResults/coverage.cobertura.xml
-  displayName: 'Run Unit Tests'
+  displayName: "Run Unit Tests"
 - task: PublishTestResults@2
   inputs:
     testRunner: VSTest
     testResultsFiles: '**/*.trx'
-  displayName: 'Publish Test Results'
+  displayName: "Publish Test Results"
 - script: dotnet reportgenerator -reports:./TestResults/coverage.cobertura.xml -reportTypes:htmlInline_azurePipelines_dark -targetdir:./TestResults
   workingDirectory: $(Build.SourcesDirectory)/TopTwitchClipBotTests
-  displayName: 'Generate Coverage Report'
+  displayName: "Generate Coverage Report"
 - task: PublishCodeCoverageResults@1
   inputs:
     codeCoverageTool: Cobertura
     summaryFileLocation: $(Build.SourcesDirectory)/TopTwitchClipBotTests/TestResults/coverage.cobertura.xml
     reportDirectory: $(Build.SourcesDirectory)/TopTwitchClipBotTests/TestResults
-  displayName: 'Publish Coverage Report'
+  displayName: "Publish Coverage Report"
 - script: dotnet build $(Build.SourcesDirectory)/TopTwitchClipBot.sln --configuration Release
-  displayName: 'Build in Release Mode'
+  displayName: "Build in Release Mode"
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: $(Build.SourcesDirectory)/TopTwitchClipBotCore/bin/Release/netcoreapp2.2
     ArtifactName: CoreDrop
     publishLocation: Container
     TargetPath: null
-  displayName: 'Publish Core Artifacts'
+  displayName: "Publish Core Artifacts"
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: $(Build.SourcesDirectory)/TopTwitchClipBotFunctions/bin/Release/netcoreapp2.2
     ArtifactName: FunctionsDrop
     publishLocation: Container
     TargetPath: null
-  displayName: 'Publish Functions Artifacts'
+  displayName: "Publish Functions Artifacts"
