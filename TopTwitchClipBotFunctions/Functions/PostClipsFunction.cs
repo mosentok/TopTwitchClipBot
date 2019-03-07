@@ -28,7 +28,7 @@ namespace TopTwitchClipBotFunctions.Functions
                 var helper = new PostClipsHelper(logWrapper, context, twitchWrapper, discordWrapper);
                 logWrapper.LogInformation("Posting clips.");
                 await discordWrapper.LogInAsync();
-                var containers = await context.GetBroadcasterConfigsAsync();
+                var containers = await context.GetBroadcasterConfigsAsync(DateTime.Now.Hour);
                 var containersReadyToPost = containers.Where(s => helper.IsReadyToPost(s.NumberOfClipsPerDay, s.ExistingHistories, yesterday)).ToList();
                 var pendingClipContainers = await helper.BuildClipContainers(topClipsEndpoint, clientId, accept, containersReadyToPost);
                 var insertedHistories = await helper.InsertHistories(pendingClipContainers);

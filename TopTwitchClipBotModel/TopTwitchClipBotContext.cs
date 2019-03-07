@@ -101,16 +101,20 @@ namespace TopTwitchClipBotModel
             await SaveChangesAsync();
             return containers;
         }
-        public async Task<List<PendingBroadcasterConfig>> GetBroadcasterConfigsAsync()
+        public async Task<List<PendingBroadcasterConfig>> GetBroadcasterConfigsAsync(int nowHour)
         {
-            return await BroadcasterConfigs.Select(s => new PendingBroadcasterConfig
-            {
-                Id = s.Id,
-                ChannelId = s.ChannelId,
-                Broadcaster = s.Broadcaster,
-                NumberOfClipsPerDay = s.NumberOfClipsPerDay,
-                ExistingHistories = s.BroadcasterHistories.Select(t => new BroadcasterHistoryContainer(s.ChannelId, t)).ToList()
-            }).ToListAsync();
+            return await (from s in BroadcasterConfigs
+                          where s.ChannelConfig.MinPostingHour == null || s.ChannelConfig.MaxPostingHour == null ||
+                               (s.ChannelConfig.MinPostingHour < s.ChannelConfig.MaxPostingHour && s.ChannelConfig.MinPostingHour <= nowHour && nowHour < s.ChannelConfig.MaxPostingHour) || //if the range spans inside a single day, then now hour must be between min and max, else...
+                               (s.ChannelConfig.MinPostingHour > s.ChannelConfig.MaxPostingHour && (s.ChannelConfig.MinPostingHour <= nowHour || nowHour < s.ChannelConfig.MaxPostingHour))
+                          select new PendingBroadcasterConfig
+                          {
+                              Id = s.Id,
+                              ChannelId = s.ChannelId,
+                              Broadcaster = s.Broadcaster,
+                              NumberOfClipsPerDay = s.NumberOfClipsPerDay,
+                              ExistingHistories = s.BroadcasterHistories.Select(t => new BroadcasterHistoryContainer(s.ChannelId, t)).ToList()
+                          }).ToListAsync();
         }
         public async Task DeleteBroadcasterConfigAsync(decimal channelId)
         {
