@@ -114,11 +114,11 @@ namespace TopTwitchClipBotModel
         }
         public async Task DeleteBroadcasterConfigAsync(decimal channelId)
         {
-            await Database.ExecuteSqlCommandAsync($"DELETE FROM ChannelTopClipConfig WHERE ChannelId = {channelId}");
+            await Database.ExecuteSqlCommandAsync($"DELETE FROM BroadcasterConfig WHERE ChannelId = {channelId}");
         }
         public async Task DeleteBroadcasterConfigAsync(decimal channelId, string broadcaster)
         {
-            await Database.ExecuteSqlCommandAsync($"DELETE FROM ChannelTopClipConfig WHERE ChannelId = {channelId} AND Broadcaster = {broadcaster}");
+            await Database.ExecuteSqlCommandAsync($"DELETE FROM BroadcasterConfig WHERE ChannelId = {channelId} AND Broadcaster = {broadcaster}");
         }
     }
 }

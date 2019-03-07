@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Commands;
 using TopTwitchClipBotModel;
 
 namespace TopTwitchClipBotCore.Helpers
@@ -9,6 +10,6 @@ namespace TopTwitchClipBotCore.Helpers
         bool IsInRange(string postingHourString, out int postingHour);
         bool ShouldDeleteAll(string broadcaster);
         bool ShouldTurnCommandOff(string input);
-        Embed BuildChannelConfigEmbed(ChannelConfigContainer container);
+        Embed BuildChannelConfigEmbed(ChannelConfigContainer container, ICommandContext context);
     }
 }

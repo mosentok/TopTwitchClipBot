@@ -26,7 +26,7 @@ namespace TopTwitchClipBotCore.Modules
         public async Task Get()
         {
             var result = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
             await ReplyAsync(message: string.Empty, embed: embed);
         }
         [Command(nameof(Between))]
@@ -38,7 +38,7 @@ namespace TopTwitchClipBotCore.Modules
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
                 var container = new ChannelConfigContainer(match, null, null);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
-                var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result);
+                var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
                 await ReplyAsync(message: string.Empty, embed: embed);
             }
             else
@@ -53,7 +53,7 @@ namespace TopTwitchClipBotCore.Modules
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
                 var container = new ChannelConfigContainer(match, minPostingHour, maxPostingHour);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
-                var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result);
+                var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
                 await ReplyAsync(message: string.Empty, embed: embed);
             }
         }
@@ -67,18 +67,20 @@ namespace TopTwitchClipBotCore.Modules
                 NumberOfClipsPerDay = numberOfClipsPerDay
             };
             var result = await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
             await ReplyAsync(message: string.Empty, embed: embed);
         }
         [Command(nameof(Remove))]
         public async Task Remove(string broadcaster)
         {
             var shouldDeleteAll = broadcaster.Equals("all", StringComparison.CurrentCultureIgnoreCase) || broadcaster.Equals("all broadcasters", StringComparison.CurrentCultureIgnoreCase);
+            ChannelConfigContainer result;
             if (shouldDeleteAll)
-                await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id);
+                result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id);
             else
-                await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id, broadcaster);
-            await ReplyAsync("Done.");
+                result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id, broadcaster);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
+            await ReplyAsync(message: string.Empty, embed: embed);
         }
     }
 }

@@ -18,12 +18,13 @@ namespace TopTwitchClipBotFunctions.Functions
         {
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
             var logWrapper = new LoggerWrapper(log);
+            ChannelConfigContainer result;
             using (var context = new TopTwitchClipBotContext(connectionString))
             {
                 var helper = new DeleteBroadcasterConfigHelper(logWrapper, context);
-                await helper.DeleteBroadcasterConfigAsync(channelId, broadcaster);
+                result = await helper.DeleteBroadcasterConfigAsync(channelId, broadcaster);
             }
-            return new NoContentResult();
+            return new OkObjectResult(result);
         }
     }
 }

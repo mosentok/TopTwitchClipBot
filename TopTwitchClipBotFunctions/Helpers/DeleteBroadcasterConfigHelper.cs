@@ -13,7 +13,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             _Log = log;
             _Context = context;
         }
-        public async Task DeleteBroadcasterConfigAsync(decimal channelId, string broadcaster)
+        public async Task<ChannelConfigContainer> DeleteBroadcasterConfigAsync(decimal channelId, string broadcaster)
         {
             if (string.IsNullOrEmpty(broadcaster))
             {
@@ -27,6 +27,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                 await _Context.DeleteBroadcasterConfigAsync(channelId, broadcaster);
                 _Log.LogInformation($"Deleted broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'.");
             }
+            return await _Context.GetChannelConfigAsync(channelId);
         }
     }
 }
