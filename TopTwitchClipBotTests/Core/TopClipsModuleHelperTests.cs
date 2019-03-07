@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Discord.Commands;
+using Moq;
 using NUnit.Framework;
 using System.Collections.Generic;
 using TopTwitchClipBotCore.Helpers;
@@ -74,6 +75,30 @@ namespace TopTwitchClipBotTests.Core
             var result = _TopClipsModuleHelper.BuildStreamersText(container);
             _ConfigWrapper.VerifyAll();
             Assert.That(result, Is.EqualTo(expectedResult));
+        }
+        [Test]
+        public void BuildChannelConfigEmbed()
+        {
+            const string channelName = "our channel name";
+            const string iconUrl = "https://twitch.tv/icon.png";
+            const string helpText = "this is the help text";
+            var context = new Mock<ICommandContext>();
+            context.Setup(s => s.Channel.Name).Returns(channelName);
+            context.Setup(s => s.Guild.IconUrl).Returns(iconUrl);
+            _ConfigWrapper.Setup(s => s["HelpQuestionFieldText"]).Returns(helpText);
+            const string postWhen = "all the time";
+            const string streamersText = "a list of streamers";
+            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText);
+            context.VerifyAll();
+            _ConfigWrapper.VerifyAll();
+            Assert.That(result.Author.Value.Name, Is.EqualTo($"Setup for Channel # {channelName}"));
+            Assert.That(result.Author.Value.IconUrl, Is.EqualTo(iconUrl));
+            Assert.That(result.Fields[0].Name, Is.EqualTo("Post When?"));
+            Assert.That(result.Fields[0].Value, Is.EqualTo(postWhen));
+            Assert.That(result.Fields[1].Name, Is.EqualTo("Streamers"));
+            Assert.That(result.Fields[1].Value, Is.EqualTo(streamersText));
+            Assert.That(result.Fields[2].Name, Is.EqualTo("Need Help?"));
+            Assert.That(result.Fields[2].Value, Is.EqualTo(helpText));
         }
     }
 }

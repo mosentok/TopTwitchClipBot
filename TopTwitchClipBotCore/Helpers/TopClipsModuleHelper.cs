@@ -60,7 +60,7 @@ namespace TopTwitchClipBotCore.Helpers
             }
             return streamersText;
         }
-        public Embed BuildChannelConfigEmbed(ChannelConfigContainer container, ICommandContext context, string postWhen, string streamersText)
+        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText)
         {
             return new EmbedBuilder()
                 .WithAuthor($"Setup for Channel # {context.Channel.Name}", context.Guild.IconUrl)
