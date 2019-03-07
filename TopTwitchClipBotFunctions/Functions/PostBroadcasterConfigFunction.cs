@@ -20,7 +20,7 @@ namespace TopTwitchClipBotFunctions.Functions
             var container = await req.Body.ReadToEndAsync<BroadcasterConfigContainer>();
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
             var logWrapper = new LoggerWrapper(log);
-            BroadcasterConfigContainer result;
+            ChannelConfigContainer result;
             using (var context = new TopTwitchClipBotContext(connectionString))
             {
                 var helper = new PostBroadcasterConfigHelper(logWrapper, context);

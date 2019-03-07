@@ -1,4 +1,7 @@
-﻿namespace TopTwitchClipBotCore.Helpers
+﻿using Discord;
+using TopTwitchClipBotModel;
+
+namespace TopTwitchClipBotCore.Helpers
 {
     public interface ITopClipsModuleHelper
     {
@@ -6,5 +9,6 @@
         bool IsInRange(string postingHourString, out int postingHour);
         bool ShouldDeleteAll(string broadcaster);
         bool ShouldTurnCommandOff(string input);
+        Embed BuildChannelConfigEmbed(ChannelConfigContainer container);
     }
 }

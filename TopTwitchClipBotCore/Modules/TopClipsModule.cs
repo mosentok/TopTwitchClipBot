@@ -26,9 +26,8 @@ namespace TopTwitchClipBotCore.Modules
         public async Task Get()
         {
             var result = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            //TODO embed builder
-            var serialized = JsonConvert.SerializeObject(result);
-            await ReplyAsync(serialized);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result);
+            await ReplyAsync(message: string.Empty, embed: embed);
         }
         [Command(nameof(Between))]
         public async Task Between([Remainder] string input)
@@ -39,9 +38,8 @@ namespace TopTwitchClipBotCore.Modules
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
                 var container = new ChannelConfigContainer(match, null, null);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
-                //TODO embed builder
-                var serialized = JsonConvert.SerializeObject(result);
-                await ReplyAsync(serialized);
+                var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result);
+                await ReplyAsync(message: string.Empty, embed: embed);
             }
             else
             {
@@ -55,9 +53,8 @@ namespace TopTwitchClipBotCore.Modules
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
                 var container = new ChannelConfigContainer(match, minPostingHour, maxPostingHour);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
-                //TODO embed builder
-                var serialized = JsonConvert.SerializeObject(result);
-                await ReplyAsync(serialized);
+                var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result);
+                await ReplyAsync(message: string.Empty, embed: embed);
             }
         }
         [Command(nameof(Of))]
@@ -70,9 +67,8 @@ namespace TopTwitchClipBotCore.Modules
                 NumberOfClipsPerDay = numberOfClipsPerDay
             };
             var result = await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
-            //TODO embed builder
-            var serialized = JsonConvert.SerializeObject(result);
-            await ReplyAsync(serialized);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result);
+            await ReplyAsync(message: string.Empty, embed: embed);
         }
         [Command(nameof(Remove))]
         public async Task Remove(string broadcaster)

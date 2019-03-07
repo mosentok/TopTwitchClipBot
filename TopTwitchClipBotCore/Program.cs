@@ -17,16 +17,17 @@ namespace TopTwitchClipBotCore
                 .AddJsonFile("appsettings.json")
                 .AddEnvironmentVariables()
                 .Build();
+            var topClipsModuleHelper = new TopClipsModuleHelper();
             var configWrapper = new ConfigurationWrapper(config);
             using (var functionWrapper = new FunctionWrapper(configWrapper))
             using (var discordWrapper = new DiscordWrapper(configWrapper["BotToken"]))
             using (var services = new ServiceCollection()
-                    .AddSingleton<IDiscordWrapper>(discordWrapper)
-                    .AddSingleton<IConfigurationWrapper>(configWrapper)
-                    .AddSingleton<IFunctionWrapper>(functionWrapper)
-                    .AddSingleton<ITopClipsModuleHelper>()
-                    .AddLogging(s => s.AddConsole())
-                    .BuildServiceProvider())
+                .AddSingleton<IDiscordWrapper>(discordWrapper)
+                .AddSingleton<IConfigurationWrapper>(configWrapper)
+                .AddSingleton<IFunctionWrapper>(functionWrapper)
+                .AddSingleton<ITopClipsModuleHelper>(topClipsModuleHelper)
+                .AddLogging(s => s.AddConsole())
+                .BuildServiceProvider())
             {
                 var bot = new Bot(services);
                 await bot.RunAsync();

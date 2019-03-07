@@ -55,7 +55,7 @@ namespace TopTwitchClipBotModel
             await SaveChangesAsync();
             return new ChannelConfigContainer(channelConfig);
         }
-        public async Task<BroadcasterConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
+        public async Task<ChannelConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
         {
             var match = await BroadcasterConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId && s.Broadcaster == broadcaster);
             BroadcasterConfig broadcasterConfig;
@@ -86,7 +86,7 @@ namespace TopTwitchClipBotModel
                 }
             }
             await SaveChangesAsync();
-            return new BroadcasterConfigContainer(broadcasterConfig);
+            return new ChannelConfigContainer(broadcasterConfig.ChannelConfig);
         }
         public async Task<List<BroadcasterHistoryContainer>> InsertBroadcasterHistoriesAsync(List<BroadcasterHistoryContainer> containers)
         {
