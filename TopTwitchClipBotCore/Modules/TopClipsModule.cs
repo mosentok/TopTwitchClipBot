@@ -1,6 +1,5 @@
 ﻿using Discord.Commands;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 using TopTwitchClipBotCore.Helpers;
@@ -26,9 +25,7 @@ namespace TopTwitchClipBotCore.Modules
         public async Task Get()
         {
             var result = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            //TODO embed builder
-            var serialized = JsonConvert.SerializeObject(result);
-            await ReplyAsync(serialized);
+            await ReplyAsync(result);
         }
         [Command(nameof(Between))]
         public async Task Between([Remainder] string input)
@@ -39,9 +36,7 @@ namespace TopTwitchClipBotCore.Modules
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
                 var container = new ChannelConfigContainer(match, null, null);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
-                //TODO embed builder
-                var serialized = JsonConvert.SerializeObject(result);
-                await ReplyAsync(serialized);
+                await ReplyAsync(result);
             }
             else
             {
@@ -55,9 +50,7 @@ namespace TopTwitchClipBotCore.Modules
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
                 var container = new ChannelConfigContainer(match, minPostingHour, maxPostingHour);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
-                //TODO embed builder
-                var serialized = JsonConvert.SerializeObject(result);
-                await ReplyAsync(serialized);
+                await ReplyAsync(result);
             }
         }
         [Command(nameof(Of))]
@@ -70,19 +63,25 @@ namespace TopTwitchClipBotCore.Modules
                 NumberOfClipsPerDay = numberOfClipsPerDay
             };
             var result = await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
-            //TODO embed builder
-            var serialized = JsonConvert.SerializeObject(result);
-            await ReplyAsync(serialized);
+            await ReplyAsync(result);
         }
         [Command(nameof(Remove))]
         public async Task Remove(string broadcaster)
         {
             var shouldDeleteAll = broadcaster.Equals("all", StringComparison.CurrentCultureIgnoreCase) || broadcaster.Equals("all broadcasters", StringComparison.CurrentCultureIgnoreCase);
+            ChannelConfigContainer result;
             if (shouldDeleteAll)
-                await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id);
+                result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id);
             else
-                await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id, broadcaster);
-            await ReplyAsync("Done.");
+                result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id, broadcaster);
+            await ReplyAsync(result);
+        }
+        async Task ReplyAsync(ChannelConfigContainer result)
+        {
+            var streamersText = _TopClipsModuleHelper.BuildStreamersText(result);
+            var postWhen = _TopClipsModuleHelper.DeterminePostWhen(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context, postWhen, streamersText);
+            await ReplyAsync(message: string.Empty, embed: embed);
         }
     }
 }

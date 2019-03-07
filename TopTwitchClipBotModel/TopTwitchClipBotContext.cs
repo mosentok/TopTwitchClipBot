@@ -55,7 +55,7 @@ namespace TopTwitchClipBotModel
             await SaveChangesAsync();
             return new ChannelConfigContainer(channelConfig);
         }
-        public async Task<BroadcasterConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
+        public async Task<ChannelConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
         {
             var match = await BroadcasterConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId && s.Broadcaster == broadcaster);
             BroadcasterConfig broadcasterConfig;
@@ -86,7 +86,7 @@ namespace TopTwitchClipBotModel
                 }
             }
             await SaveChangesAsync();
-            return new BroadcasterConfigContainer(broadcasterConfig);
+            return new ChannelConfigContainer(broadcasterConfig.ChannelConfig);
         }
         public async Task<List<BroadcasterHistoryContainer>> InsertBroadcasterHistoriesAsync(List<BroadcasterHistoryContainer> containers)
         {
@@ -114,11 +114,11 @@ namespace TopTwitchClipBotModel
         }
         public async Task DeleteBroadcasterConfigAsync(decimal channelId)
         {
-            await Database.ExecuteSqlCommandAsync($"DELETE FROM ChannelTopClipConfig WHERE ChannelId = {channelId}");
+            await Database.ExecuteSqlCommandAsync($"DELETE FROM BroadcasterConfig WHERE ChannelId = {channelId}");
         }
         public async Task DeleteBroadcasterConfigAsync(decimal channelId, string broadcaster)
         {
-            await Database.ExecuteSqlCommandAsync($"DELETE FROM ChannelTopClipConfig WHERE ChannelId = {channelId} AND Broadcaster = {broadcaster}");
+            await Database.ExecuteSqlCommandAsync($"DELETE FROM BroadcasterConfig WHERE ChannelId = {channelId} AND Broadcaster = {broadcaster}");
         }
     }
 }

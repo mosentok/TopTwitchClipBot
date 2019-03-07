@@ -27,7 +27,7 @@ namespace TopTwitchClipBotTests.Functions
             const string broadcaster = "broadcaster";
             _Log.Setup(s => s.LogInformation($"Posting broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'."));
             var inputContainer = new BroadcasterConfigContainer();
-            var outputContainer = new BroadcasterConfigContainer();
+            var outputContainer = new ChannelConfigContainer();
             _Context.Setup(s => s.SetBroadcasterConfigAsync(channelId, broadcaster, inputContainer)).ReturnsAsync(outputContainer);
             _Log.Setup(s => s.LogInformation($"Posted broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'."));
             var result = await _Helper.PostBroadcasterConfigAsync(channelId, broadcaster, inputContainer);

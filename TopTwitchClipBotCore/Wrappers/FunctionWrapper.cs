@@ -46,28 +46,32 @@ namespace TopTwitchClipBotCore.Wrappers
             var content = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<ChannelConfigContainer>(content);
         }
-        public async Task<BroadcasterConfigContainer> PostBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
+        public async Task<ChannelConfigContainer> PostBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
         {
             var requestUri = string.Format(_BroadcasterConfigEndpointFormat, channelId, broadcaster);
             var response = await _HttpClient.PostObjectWithHeaderAsync(requestUri, container, _FunctionsKeyHeaderName, _PostBroadcasterConfigFunctionKey);
             if (!response.IsSuccessStatusCode)
                 throw new FunctionHelperException($"Error posting channel top clip config for channel '{channelId}'. Status code '{response.StatusCode.ToString()}'. Reason phrase '{response.ReasonPhrase}'.");
             var content = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<BroadcasterConfigContainer>(content);
+            return JsonConvert.DeserializeObject<ChannelConfigContainer>(content);
         }
-        public async Task DeleteChannelTopClipConfigAsync(decimal channelId)
+        public async Task<ChannelConfigContainer> DeleteChannelTopClipConfigAsync(decimal channelId)
         {
             var requestUri = string.Format(_BroadcasterConfigEndpointFormat, channelId, string.Empty);
             var response = await _HttpClient.DeleteWithHeaderAsync(requestUri, _FunctionsKeyHeaderName, _DeleteBroadcasterConfigFunctionKey);
             if (!response.IsSuccessStatusCode)
                 throw new FunctionHelperException($"Error deleting all channel top clip configs for channel '{channelId}'. Status code '{response.StatusCode.ToString()}'. Reason phrase '{response.ReasonPhrase}'.");
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<ChannelConfigContainer>(content);
         }
-        public async Task DeleteChannelTopClipConfigAsync(decimal channelId, string broadcaster)
+        public async Task<ChannelConfigContainer> DeleteChannelTopClipConfigAsync(decimal channelId, string broadcaster)
         {
             var requestUri = string.Format(_BroadcasterConfigEndpointFormat, channelId, broadcaster);
             var response = await _HttpClient.DeleteWithHeaderAsync(requestUri, _FunctionsKeyHeaderName, _DeleteBroadcasterConfigFunctionKey);
             if (!response.IsSuccessStatusCode)
                 throw new FunctionHelperException($"Error deleting channel top clip config for channel '{channelId}'. Status code '{response.StatusCode.ToString()}'. Reason phrase '{response.ReasonPhrase}'.");
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<ChannelConfigContainer>(content);
         }
         public void Dispose()
         {

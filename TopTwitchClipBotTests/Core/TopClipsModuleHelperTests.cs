@@ -1,16 +1,22 @@
-﻿using NUnit.Framework;
+﻿using Moq;
+using NUnit.Framework;
+using System.Collections.Generic;
 using TopTwitchClipBotCore.Helpers;
+using TopTwitchClipBotCore.Wrappers;
+using TopTwitchClipBotModel;
 
 namespace TopTwitchClipBotTests.Core
 {
     [TestFixture]
     public class TopClipsModuleHelperTests
     {
+        Mock<IConfigurationWrapper> _ConfigWrapper;
         TopClipsModuleHelper _TopClipsModuleHelper;
         [SetUp]
         public void SetUp()
         {
-            _TopClipsModuleHelper = new TopClipsModuleHelper();
+            _ConfigWrapper = new Mock<IConfigurationWrapper>();
+            _TopClipsModuleHelper = new TopClipsModuleHelper(_ConfigWrapper.Object);
         }
         [TestCase("Off", true)]
         [TestCase("off", true)]
@@ -47,6 +53,26 @@ namespace TopTwitchClipBotTests.Core
         public void ShouldDeleteAll(string broadcaster, bool expectedResult)
         {
             var result = _TopClipsModuleHelper.ShouldDeleteAll(broadcaster);
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
+        [TestCase(8, 22, "```between 8 and 22```")]
+        [TestCase(8, null, "```all the time```")]
+        [TestCase(null, 22, "```all the time```")]
+        [TestCase(null, null, "```all the time```")]
+        public void DeterminePostWhen(int? minPostingHour, int? maxPostingHour, string expectedResult)
+        {
+            var container = new ChannelConfigContainer { MinPostingHour = minPostingHour, MaxPostingHour = maxPostingHour };
+            var result = _TopClipsModuleHelper.DeterminePostWhen(container);
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
+        [Test]
+        public void BuildStreamersText_NoStreamers()
+        {
+            var container = new ChannelConfigContainer { Broadcasters = new List<BroadcasterConfigContainer>() };
+            const string expectedResult = "no streamers have been set up";
+            _ConfigWrapper.Setup(s => s["NoStreamersText"]).Returns(expectedResult);
+            var result = _TopClipsModuleHelper.BuildStreamersText(container);
+            _ConfigWrapper.VerifyAll();
             Assert.That(result, Is.EqualTo(expectedResult));
         }
     }
