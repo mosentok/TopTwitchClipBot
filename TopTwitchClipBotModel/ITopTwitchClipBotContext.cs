@@ -16,6 +16,6 @@ namespace TopTwitchClipBotModel
         Task<List<PendingBroadcasterConfig>> GetBroadcasterConfigsAsync(int nowHour);
         Task<List<BroadcasterHistoryContainer>> InsertBroadcasterHistoriesAsync(List<BroadcasterHistoryContainer> containers);
         Task<ChannelConfigContainer> SetChannelConfigAsync(decimal channelId, ChannelConfigContainer container);
-        Task<ChannelConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container);
+        Task<ChannelConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string displayName, BroadcasterConfigContainer container);
     }
 }

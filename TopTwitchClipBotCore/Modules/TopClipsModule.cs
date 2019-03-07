@@ -63,7 +63,10 @@ namespace TopTwitchClipBotCore.Modules
                 NumberOfClipsPerDay = numberOfClipsPerDay
             };
             var result = await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
-            await ReplyAsync(result);
+            if (!string.IsNullOrEmpty(result.ErrorMessage))
+                await ReplyAsync(message: result.ErrorMessage);
+            else
+                await ReplyAsync(result.ChannelConfigContainer);
         }
         [Command(nameof(Remove))]
         public async Task Remove(string broadcaster)

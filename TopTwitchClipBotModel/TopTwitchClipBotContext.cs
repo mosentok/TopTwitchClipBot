@@ -55,13 +55,14 @@ namespace TopTwitchClipBotModel
             await SaveChangesAsync();
             return new ChannelConfigContainer(channelConfig);
         }
-        public async Task<ChannelConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
+        public async Task<ChannelConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string displayName, BroadcasterConfigContainer container)
         {
-            var match = await BroadcasterConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId && s.Broadcaster == broadcaster);
+            var match = await BroadcasterConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId && s.Broadcaster == displayName);
             BroadcasterConfig broadcasterConfig;
             if (match != null) //mutate it
             {
                 broadcasterConfig = match;
+                broadcasterConfig.Broadcaster = displayName;
                 broadcasterConfig.NumberOfClipsPerDay = container.NumberOfClipsPerDay;
             }
             else
@@ -69,7 +70,7 @@ namespace TopTwitchClipBotModel
                 broadcasterConfig = new BroadcasterConfig
                 {
                     ChannelId = container.ChannelId,
-                    Broadcaster = container.Broadcaster,
+                    Broadcaster = displayName,
                     NumberOfClipsPerDay = container.NumberOfClipsPerDay
                 };
                 ChannelConfig channelConfig;
