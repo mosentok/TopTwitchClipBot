@@ -19,6 +19,7 @@ namespace TopTwitchClipBotCore
                 .Build();
             var configWrapper = new ConfigurationWrapper(config);
             var topClipsModuleHelper = new TopClipsModuleHelper(configWrapper);
+            var botHelper = new BotHelper(configWrapper);
             using (var functionWrapper = new FunctionWrapper(configWrapper))
             using (var discordWrapper = new DiscordWrapper(configWrapper["BotToken"]))
             using (var services = new ServiceCollection()
@@ -26,6 +27,7 @@ namespace TopTwitchClipBotCore
                 .AddSingleton<IConfigurationWrapper>(configWrapper)
                 .AddSingleton<IFunctionWrapper>(functionWrapper)
                 .AddSingleton<ITopClipsModuleHelper>(topClipsModuleHelper)
+                .AddSingleton<IBotHelper>(botHelper)
                 .AddLogging(s => s.AddConsole())
                 .BuildServiceProvider())
             {

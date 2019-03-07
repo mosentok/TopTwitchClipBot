@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using TopTwitchClipBotCore.Helpers;
 using TopTwitchClipBotCore.Wrappers;
 
 namespace TopTwitchClipBotCore
@@ -18,6 +19,7 @@ namespace TopTwitchClipBotCore
         readonly IDiscordWrapper _DiscordWrapper;
         readonly IConfigurationWrapper _ConfigWrapper;
         readonly ILogger _Log;
+        readonly IBotHelper _BotHelper;
         readonly CommandService _Commands;
         List<string> _ModuleNames;
         Dictionary<decimal, string> _PrefixDictionary;
@@ -27,6 +29,7 @@ namespace TopTwitchClipBotCore
             _DiscordWrapper = _Services.GetService<IDiscordWrapper>();
             _ConfigWrapper = _Services.GetService<IConfigurationWrapper>();
             _Log = _Services.GetService<ILogger<Bot>>();
+            _BotHelper = _Services.GetService<IBotHelper>();
             _Commands = new CommandService();
         }
         public async Task RunAsync()
@@ -47,30 +50,17 @@ namespace TopTwitchClipBotCore
         }
         async Task MessageReceived(SocketMessage socketMessage)
         {
-            var isDmChannel = socketMessage.Channel is IDMChannel;
-            if (isDmChannel)
+            var shouldProcess = _BotHelper.ShouldProcessMessage(socketMessage, _DiscordWrapper.CurrentUser, _PrefixDictionary);
+            if (!shouldProcess.ShouldProcessMessage)
                 return;
-            if (socketMessage.Author.IsBot || !(socketMessage is IUserMessage userMessage))
-                return;
-            var prefix = DeterminePrefix(userMessage.Channel.Id);
-            var argPos = 0;
-            if (!userMessage.HasStringPrefix(prefix, ref argPos) && !userMessage.HasMentionPrefix(_DiscordWrapper.CurrentUser, ref argPos))
-                return;
-            var context = new CommandContext(_DiscordWrapper.DiscordClient, userMessage);
-            var result = await _Commands.ExecuteAsync(context, argPos, _Services);
+            var context = new CommandContext(_DiscordWrapper.DiscordClient, shouldProcess.UserMessage);
+            var result = await _Commands.ExecuteAsync(context, shouldProcess.ArgPos, _Services);
             if (!result.IsSuccess &&
                 result.Error.HasValue &&
                 result.Error.Value != CommandError.UnknownCommand &&
                 result.Error.Value != CommandError.BadArgCount &&
                 result is ExecuteResult executeResult)
-                _Log.LogError(executeResult.Exception, $"Error processing message content '{userMessage.Content}'.");
-        }
-        string DeterminePrefix(decimal channelId)
-        {
-            var found = _PrefixDictionary.TryGetValue(channelId, out var prefix);
-            if (found)
-                return prefix;
-            return _ConfigWrapper["DefaultPrefix"];
+                _Log.LogError(executeResult.Exception, $"Error processing message content '{shouldProcess.UserMessage.Content}'.");
         }
         Task LogReceived(LogMessage logMessage)
         {
