@@ -10,6 +10,8 @@ namespace TopTwitchClipBotCore.Helpers
         bool IsInRange(string postingHourString, out int postingHour);
         bool ShouldDeleteAll(string broadcaster);
         bool ShouldTurnCommandOff(string input);
-        Embed BuildChannelConfigEmbed(ChannelConfigContainer container, ICommandContext context);
+        string DeterminePostWhen(ChannelConfigContainer container);
+        string BuildStreamersText(ChannelConfigContainer container);
+        Embed BuildChannelConfigEmbed(ChannelConfigContainer container, ICommandContext context, string postWhen, string streamersText);
     }
 }

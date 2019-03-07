@@ -1,6 +1,5 @@
 ﻿using Discord.Commands;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 using TopTwitchClipBotCore.Helpers;
@@ -26,8 +25,7 @@ namespace TopTwitchClipBotCore.Modules
         public async Task Get()
         {
             var result = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
-            await ReplyAsync(message: string.Empty, embed: embed);
+            await ReplyAsync(result);
         }
         [Command(nameof(Between))]
         public async Task Between([Remainder] string input)
@@ -38,8 +36,7 @@ namespace TopTwitchClipBotCore.Modules
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
                 var container = new ChannelConfigContainer(match, null, null);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
-                var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
-                await ReplyAsync(message: string.Empty, embed: embed);
+                await ReplyAsync(result);
             }
             else
             {
@@ -53,8 +50,7 @@ namespace TopTwitchClipBotCore.Modules
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
                 var container = new ChannelConfigContainer(match, minPostingHour, maxPostingHour);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
-                var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
-                await ReplyAsync(message: string.Empty, embed: embed);
+                await ReplyAsync(result);
             }
         }
         [Command(nameof(Of))]
@@ -67,8 +63,7 @@ namespace TopTwitchClipBotCore.Modules
                 NumberOfClipsPerDay = numberOfClipsPerDay
             };
             var result = await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
-            await ReplyAsync(message: string.Empty, embed: embed);
+            await ReplyAsync(result);
         }
         [Command(nameof(Remove))]
         public async Task Remove(string broadcaster)
@@ -79,7 +74,13 @@ namespace TopTwitchClipBotCore.Modules
                 result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id);
             else
                 result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id, broadcaster);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context);
+            await ReplyAsync(result);
+        }
+        async Task ReplyAsync(ChannelConfigContainer result)
+        {
+            var streamersText = _TopClipsModuleHelper.BuildStreamersText(result);
+            var postWhen = _TopClipsModuleHelper.DeterminePostWhen(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(result, Context, postWhen, streamersText);
             await ReplyAsync(message: string.Empty, embed: embed);
         }
     }
