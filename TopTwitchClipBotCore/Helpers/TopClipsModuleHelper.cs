@@ -1,11 +1,19 @@
 ﻿using Discord;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using TopTwitchClipBotCore.Wrappers;
 using TopTwitchClipBotModel;
 
 namespace TopTwitchClipBotCore.Helpers
 {
     public class TopClipsModuleHelper : ITopClipsModuleHelper
     {
+        readonly IConfigurationWrapper _ConfigWrapper;
+        public TopClipsModuleHelper(IConfigurationWrapper configWrapper)
+        {
+            _ConfigWrapper = configWrapper;
+        }
         public bool ShouldTurnCommandOff(string input)
         {
             return input.Equals("Off", StringComparison.CurrentCultureIgnoreCase) || input.Equals("all the time", StringComparison.CurrentCultureIgnoreCase);
@@ -31,19 +39,24 @@ namespace TopTwitchClipBotCore.Helpers
                 postWhen = $"between {container.MinPostingHour.Value} and {container.MaxPostingHour.Value}";
             else
                 postWhen = "all the time";
-            var embedBuilder = new EmbedBuilder().AddField("Post When?", postWhen);
+            var streamersText = _ConfigWrapper["StreamersFieldBeginText"];
+            var streamersFormats = _ConfigWrapper.Get<List<string>>("StreamersFormats").Select(s => s.Replace(_ConfigWrapper["NewLineDelimiter"], "\n")).ToList();
+            var index = 0;
             foreach (var broadcaster in container.Broadcasters)
             {
-                string clipsPerDay;
+                string streamerText;
                 if (broadcaster.NumberOfClipsPerDay.HasValue)
-                    clipsPerDay = $"{broadcaster.Broadcaster}, {broadcaster.NumberOfClipsPerDay.Value} clips/day";
+                    streamerText = $"{broadcaster.Broadcaster}, {broadcaster.NumberOfClipsPerDay.Value} clips per day";
                 else
-                    clipsPerDay = broadcaster.Broadcaster;
-                embedBuilder = embedBuilder.AddField("Broadcaster", clipsPerDay);
+                    streamerText = $"{broadcaster.Broadcaster}, no limit";
+                streamersText += string.Format(streamersFormats[index], streamerText);
+                index = (index + 1) % streamersFormats.Count;
             }
-            //TODO github link, and move to config
-            embedBuilder.AddField("Need Help?", "Type `!topclips examples` for some examples, or visit GitHub for more info.");
-            return embedBuilder.Build();
+            return new EmbedBuilder()
+                .AddField("Post When?", postWhen)
+                .AddField("Streamers", streamersText)
+                .AddField("Need Help?", _ConfigWrapper["HelpQuestionFieldText"])
+                .Build();
         }
     }
 }

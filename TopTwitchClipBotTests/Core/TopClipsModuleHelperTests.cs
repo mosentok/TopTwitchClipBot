@@ -1,16 +1,20 @@
-﻿using NUnit.Framework;
+﻿using Moq;
+using NUnit.Framework;
 using TopTwitchClipBotCore.Helpers;
+using TopTwitchClipBotCore.Wrappers;
 
 namespace TopTwitchClipBotTests.Core
 {
     [TestFixture]
     public class TopClipsModuleHelperTests
     {
+        Mock<IConfigurationWrapper> _ConfigWrapper;
         TopClipsModuleHelper _TopClipsModuleHelper;
         [SetUp]
         public void SetUp()
         {
-            _TopClipsModuleHelper = new TopClipsModuleHelper();
+            _ConfigWrapper = new Mock<IConfigurationWrapper>();
+            _TopClipsModuleHelper = new TopClipsModuleHelper(_ConfigWrapper.Object);
         }
         [TestCase("Off", true)]
         [TestCase("off", true)]

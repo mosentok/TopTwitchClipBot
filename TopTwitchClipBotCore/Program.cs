@@ -17,8 +17,8 @@ namespace TopTwitchClipBotCore
                 .AddJsonFile("appsettings.json")
                 .AddEnvironmentVariables()
                 .Build();
-            var topClipsModuleHelper = new TopClipsModuleHelper();
             var configWrapper = new ConfigurationWrapper(config);
+            var topClipsModuleHelper = new TopClipsModuleHelper(configWrapper);
             using (var functionWrapper = new FunctionWrapper(configWrapper))
             using (var discordWrapper = new DiscordWrapper(configWrapper["BotToken"]))
             using (var services = new ServiceCollection()
