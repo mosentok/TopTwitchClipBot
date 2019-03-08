@@ -14,6 +14,7 @@ namespace TopTwitchClipBotModel
         public string Prefix { get; set; }
         public int? MinPostingHour { get; set; }
         public int? MaxPostingHour { get; set; }
+        public int? NumberOfClipsAtATime { get; set; }
         public virtual ICollection<BroadcasterConfig> BroadcasterConfigs { get; set; }
     }
 }
