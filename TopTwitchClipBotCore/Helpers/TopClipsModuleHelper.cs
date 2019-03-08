@@ -52,7 +52,10 @@ namespace TopTwitchClipBotCore.Helpers
             {
                 string streamerText;
                 if (broadcaster.NumberOfClipsPerDay.HasValue)
-                    streamerText = $"{broadcaster.Broadcaster}, {broadcaster.NumberOfClipsPerDay.Value} clips per day";
+                    if (broadcaster.NumberOfClipsPerDay.Value == 1)
+                        streamerText = $"{broadcaster.Broadcaster}, {broadcaster.NumberOfClipsPerDay.Value} clip per day";
+                    else
+                        streamerText = $"{broadcaster.Broadcaster}, {broadcaster.NumberOfClipsPerDay.Value} clips per day";
                 else
                     streamerText = $"{broadcaster.Broadcaster}, no limit";
                 streamersText += string.Format(streamersFormats[index], streamerText);
@@ -60,11 +63,21 @@ namespace TopTwitchClipBotCore.Helpers
             }
             return streamersText;
         }
-        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText)
+        public string DetermineClipsAtATime(ChannelConfigContainer container)
+        {
+            if (container.NumberOfClipsAtATime.HasValue)
+                if (container.NumberOfClipsAtATime.Value == 1)
+                    return $"```{container.NumberOfClipsAtATime.Value} clip at a time```";
+                else
+                    return $"```{container.NumberOfClipsAtATime.Value} clips at a time```";
+            return "```no limit```";
+        }
+        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime)
         {
             return new EmbedBuilder()
                 .WithAuthor($"Setup for Channel # {context.Channel.Name}", context.Guild.IconUrl)
-                .AddField("Post When?", postWhen)
+                .AddField("Post When?", postWhen, true)
+                .AddField("Clips at a Time", clipsAtATime, true)
                 .AddField("Streamers", streamersText)
                 .AddField("Need Help?", _ConfigWrapper["HelpQuestionFieldText"])
                 .Build();

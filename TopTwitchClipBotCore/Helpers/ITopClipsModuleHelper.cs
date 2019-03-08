@@ -12,6 +12,7 @@ namespace TopTwitchClipBotCore.Helpers
         bool ShouldTurnCommandOff(string input);
         string DeterminePostWhen(ChannelConfigContainer container);
         string BuildStreamersText(ChannelConfigContainer container);
-        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText);
+        string DetermineClipsAtATime(ChannelConfigContainer container);
+        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime);
     }
 }

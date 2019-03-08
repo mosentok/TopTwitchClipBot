@@ -82,7 +82,7 @@ namespace TopTwitchClipBotTests.Core
             var broadcaster1 = new BroadcasterConfigContainer { Broadcaster = "broadcaster123" };
             var broadcaster2 = new BroadcasterConfigContainer { Broadcaster = "anotherstreamer", NumberOfClipsPerDay = 4 };
             var broadcaster3 = new BroadcasterConfigContainer { Broadcaster = "omegalulmydude" };
-            var broadcaster4 = new BroadcasterConfigContainer { Broadcaster = "zzzzzzzzzzz", NumberOfClipsPerDay = 2 };
+            var broadcaster4 = new BroadcasterConfigContainer { Broadcaster = "zzzzzzzzzzz", NumberOfClipsPerDay = 1 };
             var broadcasters = new List<BroadcasterConfigContainer> { broadcaster1, broadcaster2, broadcaster3, broadcaster4 };
             var container = new ChannelConfigContainer { Broadcasters = broadcasters };
             const string streamersBegin = "here's your list of streamers";
@@ -98,7 +98,16 @@ namespace TopTwitchClipBotTests.Core
                 "```less\nanotherstreamer, 4 clips per day```" +
                 "```diff\nbroadcaster123, no limit```" +
                 "```fix\nomegalulmydude, no limit```" +
-                "```less\nzzzzzzzzzzz, 2 clips per day```";
+                "```less\nzzzzzzzzzzz, 1 clip per day```";
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
+        [TestCase(null, "```no limit```")]
+        [TestCase(1, "```1 clip at a time```")]
+        [TestCase(2, "```2 clips at a time```")]
+        public void DetermineClipsAtATime(int? numberOfClipsAtATime, string expectedResult)
+        {
+            var container = new ChannelConfigContainer { NumberOfClipsAtATime = numberOfClipsAtATime };
+            var result = _TopClipsModuleHelper.DetermineClipsAtATime(container);
             Assert.That(result, Is.EqualTo(expectedResult));
         }
         [Test]
@@ -113,17 +122,24 @@ namespace TopTwitchClipBotTests.Core
             _ConfigWrapper.Setup(s => s["HelpQuestionFieldText"]).Returns(helpText);
             const string postWhen = "all the time";
             const string streamersText = "a list of streamers";
-            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText);
+            const string clipsAtATime = "some clips at a time";
+            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText, clipsAtATime);
             context.VerifyAll();
             _ConfigWrapper.VerifyAll();
             Assert.That(result.Author.Value.Name, Is.EqualTo($"Setup for Channel # {channelName}"));
             Assert.That(result.Author.Value.IconUrl, Is.EqualTo(iconUrl));
             Assert.That(result.Fields[0].Name, Is.EqualTo("Post When?"));
             Assert.That(result.Fields[0].Value, Is.EqualTo(postWhen));
-            Assert.That(result.Fields[1].Name, Is.EqualTo("Streamers"));
-            Assert.That(result.Fields[1].Value, Is.EqualTo(streamersText));
-            Assert.That(result.Fields[2].Name, Is.EqualTo("Need Help?"));
-            Assert.That(result.Fields[2].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[0].Inline, Is.EqualTo(true));
+            Assert.That(result.Fields[1].Name, Is.EqualTo("Clips at a Time"));
+            Assert.That(result.Fields[1].Value, Is.EqualTo(clipsAtATime));
+            Assert.That(result.Fields[1].Inline, Is.EqualTo(true));
+            Assert.That(result.Fields[2].Name, Is.EqualTo("Streamers"));
+            Assert.That(result.Fields[2].Value, Is.EqualTo(streamersText));
+            Assert.That(result.Fields[2].Inline, Is.EqualTo(false));
+            Assert.That(result.Fields[3].Name, Is.EqualTo("Need Help?"));
+            Assert.That(result.Fields[3].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[3].Inline, Is.EqualTo(false));
         }
     }
 }
