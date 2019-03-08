@@ -9,6 +9,7 @@ namespace TopTwitchClipBotModel
         public int? MinPostingHour { get; set; }
         public int? MaxPostingHour { get; set; }
         public int? NumberOfClipsAtATime { get; set; }
+        public long? TimeSpanBetweenClipsAsTicks { get; set; }
         public List<PendingBroadcasterConfig> Broadcasters { get; set; }
         public PendingChannelConfigContainer() { }
         public PendingChannelConfigContainer(PendingChannelConfigContainer channelContainer, List<PendingBroadcasterConfig> broadcasters)
@@ -18,6 +19,7 @@ namespace TopTwitchClipBotModel
             MinPostingHour = channelContainer.MinPostingHour;
             MaxPostingHour = channelContainer.MaxPostingHour;
             NumberOfClipsAtATime = channelContainer.NumberOfClipsAtATime;
+            TimeSpanBetweenClipsAsTicks = channelContainer.TimeSpanBetweenClipsAsTicks;
             Broadcasters = broadcasters;
         }
     }

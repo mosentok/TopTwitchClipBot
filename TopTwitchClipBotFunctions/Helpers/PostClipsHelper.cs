@@ -21,6 +21,25 @@ namespace TopTwitchClipBotFunctions.Helpers
             _Context = context;
             _Log = log;
         }
+        public List<PendingChannelConfigContainer> AfterTimeBetweenClips(List<PendingChannelConfigContainer> channelContainers, DateTime now)
+        {
+            var pendingContainers = new List<PendingChannelConfigContainer>();
+            foreach (var channelContainer in channelContainers)
+            {
+                var isAfterTimeBetweenClips = IsAfterTimeBetweenClips(channelContainer, now);
+                if (isAfterTimeBetweenClips)
+                    pendingContainers.Add(channelContainer);
+            }
+            return pendingContainers;
+        }
+        static bool IsAfterTimeBetweenClips(PendingChannelConfigContainer channelContainer, DateTime now)
+        {
+            if (!channelContainer.TimeSpanBetweenClipsAsTicks.HasValue)
+                return true;
+            var latestHistoryStamp = channelContainer.Broadcasters.SelectMany(s => s.ExistingHistories).Max(s => s.Stamp);
+            var timeSinceLastPost = now - latestHistoryStamp;
+            return timeSinceLastPost.Ticks >= channelContainer.TimeSpanBetweenClipsAsTicks.Value;
+        }
         public List<PendingChannelConfigContainer> ReadyToPostContainers(List<PendingChannelConfigContainer> channelContainers, DateTime yesterday)
         {
             var pendingContainers = new List<PendingChannelConfigContainer>();

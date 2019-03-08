@@ -3,6 +3,8 @@ using Discord.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TopTwitchClipBotCore.Enums;
+using TopTwitchClipBotCore.Exceptions;
 using TopTwitchClipBotCore.Wrappers;
 using TopTwitchClipBotModel;
 
@@ -35,9 +37,14 @@ namespace TopTwitchClipBotCore.Helpers
         }
         public string DeterminePostWhen(ChannelConfigContainer container)
         {
+            string output;
             if (container.MinPostingHour.HasValue && container.MaxPostingHour.HasValue)
-                return $"```between {container.MinPostingHour.Value} and {container.MaxPostingHour.Value}```";
-            return "```all the time```";
+                output = $"between {container.MinPostingHour.Value} and {container.MaxPostingHour.Value}";
+            else
+                output = "all the time";
+            var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
+            var postWhenFormat = _ConfigWrapper["PostWhenFormat"].Replace(newLineDelimiter, "\n");
+            return string.Format(postWhenFormat, output);
         }
         public string BuildStreamersText(ChannelConfigContainer container)
         {
@@ -65,18 +72,64 @@ namespace TopTwitchClipBotCore.Helpers
         }
         public string DetermineClipsAtATime(ChannelConfigContainer container)
         {
+            string output;
             if (container.NumberOfClipsAtATime.HasValue)
+            {
                 if (container.NumberOfClipsAtATime.Value == 1)
-                    return $"```{container.NumberOfClipsAtATime.Value} clip at a time```";
+                    output = $"{container.NumberOfClipsAtATime.Value} clip at a time";
                 else
-                    return $"```{container.NumberOfClipsAtATime.Value} clips at a time```";
-            return "```no limit```";
+                    output = $"{container.NumberOfClipsAtATime.Value} clips at a time";
+            }
+            else
+                output = "no limit";
+            var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
+            var clipsAtATimeFormat = _ConfigWrapper["ClipsAtATimeFormat"].Replace(newLineDelimiter, "\n");
+            return string.Format(clipsAtATimeFormat, output);
         }
-        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime)
+        public long TicksFromIntervalTime(int interval, Time time)
+        {
+            switch (time)
+            {
+                case Time.Minute:
+                case Time.Minutes:
+                    var minInterval = _ConfigWrapper.GetValue<int>("MinInterval");
+                    if (interval < minInterval)
+                        throw new ModuleException($"Needs to be at least {minInterval} minutes.");
+                    return TimeSpan.FromMinutes(interval).Ticks;
+                case Time.Hour:
+                case Time.Hours:
+                    if (interval < 1)
+                        throw new ModuleException("Needs to be at least 1 hour.");
+                    return TimeSpan.FromHours(interval).Ticks;
+                default:
+                    throw new ModuleException($"Invalid time '{time.ToString()}'.");
+            }
+        }
+        public string TimeSpanBetweenClipsAsString(ChannelConfigContainer result)
+        {
+            string output;
+            if (!result.TimeSpanBetweenClipsAsTicks.HasValue)
+                output = "at least a few minutes";
+            else
+            {
+                var timeSpan = TimeSpan.FromTicks(result.TimeSpanBetweenClipsAsTicks.Value);
+                if (timeSpan.TotalMinutes < 60)
+                    output = $"at least {(int)timeSpan.TotalMinutes} minutes";
+                else if (timeSpan.TotalHours == 1)
+                    output = "at least 1 hour";
+                else
+                    output = $"at least {(int)timeSpan.TotalHours} hours";
+            }
+            var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
+            var timeBetweenClipsFormat = _ConfigWrapper["TimeBetweenClipsFormat"].Replace(newLineDelimiter, "\n");
+            return string.Format(timeBetweenClipsFormat, output);
+        }
+        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString)
         {
             return new EmbedBuilder()
                 .WithAuthor($"Setup for Channel # {context.Channel.Name}", context.Guild.IconUrl)
                 .AddField("Post When?", postWhen, true)
+                .AddField("Time Between Clips?", timeSpanString, true)
                 .AddField("Clips at a Time", clipsAtATime, true)
                 .AddField("Streamers", streamersText)
                 .AddField("Need Help?", _ConfigWrapper["HelpQuestionFieldText"])

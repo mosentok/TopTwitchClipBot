@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using TopTwitchClipBotCore.Enums;
 using TopTwitchClipBotModel;
 
 namespace TopTwitchClipBotCore.Helpers
@@ -13,6 +14,8 @@ namespace TopTwitchClipBotCore.Helpers
         string DeterminePostWhen(ChannelConfigContainer container);
         string BuildStreamersText(ChannelConfigContainer container);
         string DetermineClipsAtATime(ChannelConfigContainer container);
-        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime);
+        long TicksFromIntervalTime(int interval, Time time);
+        string TimeSpanBetweenClipsAsString(ChannelConfigContainer result);
+        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString);
     }
 }

@@ -2,6 +2,8 @@
 using Moq;
 using NUnit.Framework;
 using System.Collections.Generic;
+using TopTwitchClipBotCore.Enums;
+using TopTwitchClipBotCore.Exceptions;
 using TopTwitchClipBotCore.Helpers;
 using TopTwitchClipBotCore.Wrappers;
 using TopTwitchClipBotModel;
@@ -56,14 +58,17 @@ namespace TopTwitchClipBotTests.Core
             var result = _TopClipsModuleHelper.ShouldDeleteAll(broadcaster);
             Assert.That(result, Is.EqualTo(expectedResult));
         }
-        [TestCase(8, 22, "```between 8 and 22```")]
-        [TestCase(8, null, "```all the time```")]
-        [TestCase(null, 22, "```all the time```")]
-        [TestCase(null, null, "```all the time```")]
+        [TestCase(8, 22, "```fix\nbetween 8 and 22```")]
+        [TestCase(8, null, "```fix\nall the time```")]
+        [TestCase(null, 22, "```fix\nall the time```")]
+        [TestCase(null, null, "```fix\nall the time```")]
         public void DeterminePostWhen(int? minPostingHour, int? maxPostingHour, string expectedResult)
         {
+            _ConfigWrapper.Setup(s => s["NewLineDelimiter"]).Returns("NEWLINE");
+            _ConfigWrapper.Setup(s => s["PostWhenFormat"]).Returns("```fixNEWLINE{0}```");
             var container = new ChannelConfigContainer { MinPostingHour = minPostingHour, MaxPostingHour = maxPostingHour };
             var result = _TopClipsModuleHelper.DeterminePostWhen(container);
+            _ConfigWrapper.VerifyAll();
             Assert.That(result, Is.EqualTo(expectedResult));
         }
         [Test]
@@ -101,14 +106,47 @@ namespace TopTwitchClipBotTests.Core
                 "```less\nzzzzzzzzzzz, 1 clip per day```";
             Assert.That(result, Is.EqualTo(expectedResult));
         }
-        [TestCase(null, "```no limit```")]
-        [TestCase(1, "```1 clip at a time```")]
-        [TestCase(2, "```2 clips at a time```")]
+        [TestCase(null, "```less\nno limit```")]
+        [TestCase(1, "```less\n1 clip at a time```")]
+        [TestCase(2, "```less\n2 clips at a time```")]
         public void DetermineClipsAtATime(int? numberOfClipsAtATime, string expectedResult)
         {
+            _ConfigWrapper.Setup(s => s["NewLineDelimiter"]).Returns("NEWLINE");
+            _ConfigWrapper.Setup(s => s["ClipsAtATimeFormat"]).Returns("```lessNEWLINE{0}```");
             var container = new ChannelConfigContainer { NumberOfClipsAtATime = numberOfClipsAtATime };
             var result = _TopClipsModuleHelper.DetermineClipsAtATime(container);
+            _ConfigWrapper.VerifyAll();
             Assert.That(result, Is.EqualTo(expectedResult));
+        }
+        [TestCase(10, Time.Minutes, 6_000_000_000)]
+        [TestCase(15, Time.Minutes, 9_000_000_000)]
+        [TestCase(20, Time.Minutes, 12_000_000_000)]
+        [TestCase(30, Time.Minutes, 18_000_000_000)]
+        [TestCase(1, Time.Hour, 36_000_000_000)]
+        [TestCase(2, Time.Hours, 72_000_000_000)]
+        [TestCase(3, Time.Hours, 108_000_000_000)]
+        [TestCase(4, Time.Hours, 144_000_000_000)]
+        public void TicksFromIntervalTime(int interval, Time time, long expectedResult)
+        {
+            var result = _TopClipsModuleHelper.TicksFromIntervalTime(interval, time);
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
+        [Test]
+        public void TicksFromIntervalTime_TooSmall()
+        {
+            const int minInterval = 5;
+            _ConfigWrapper.Setup(s => s.GetValue<int>("MinInterval")).Returns(minInterval);
+            Assert.That(() => _TopClipsModuleHelper.TicksFromIntervalTime(4, Time.Minutes), 
+                Throws.InstanceOf<ModuleException>()
+                .With.Message.EqualTo($"Needs to be at least {minInterval} minutes."));
+            _ConfigWrapper.VerifyAll();
+        }
+        [Test]
+        public void TicksFromIntervalTime_InvalidTime()
+        {
+            Assert.That(() => _TopClipsModuleHelper.TicksFromIntervalTime(-1, (Time)(-1)),
+                Throws.InstanceOf<ModuleException>()
+                .With.Message.EqualTo("Invalid time '-1'."));
         }
         [Test]
         public void BuildChannelConfigEmbed()
@@ -123,7 +161,8 @@ namespace TopTwitchClipBotTests.Core
             const string postWhen = "all the time";
             const string streamersText = "a list of streamers";
             const string clipsAtATime = "some clips at a time";
-            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText, clipsAtATime);
+            const string timeSpanString = "some time between clips";
+            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText, clipsAtATime, timeSpanString);
             context.VerifyAll();
             _ConfigWrapper.VerifyAll();
             Assert.That(result.Author.Value.Name, Is.EqualTo($"Setup for Channel # {channelName}"));
@@ -131,15 +170,18 @@ namespace TopTwitchClipBotTests.Core
             Assert.That(result.Fields[0].Name, Is.EqualTo("Post When?"));
             Assert.That(result.Fields[0].Value, Is.EqualTo(postWhen));
             Assert.That(result.Fields[0].Inline, Is.EqualTo(true));
-            Assert.That(result.Fields[1].Name, Is.EqualTo("Clips at a Time"));
-            Assert.That(result.Fields[1].Value, Is.EqualTo(clipsAtATime));
+            Assert.That(result.Fields[1].Name, Is.EqualTo("Time Between Clips?"));
+            Assert.That(result.Fields[1].Value, Is.EqualTo(timeSpanString));
             Assert.That(result.Fields[1].Inline, Is.EqualTo(true));
-            Assert.That(result.Fields[2].Name, Is.EqualTo("Streamers"));
-            Assert.That(result.Fields[2].Value, Is.EqualTo(streamersText));
-            Assert.That(result.Fields[2].Inline, Is.EqualTo(false));
-            Assert.That(result.Fields[3].Name, Is.EqualTo("Need Help?"));
-            Assert.That(result.Fields[3].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[2].Name, Is.EqualTo("Clips at a Time"));
+            Assert.That(result.Fields[2].Value, Is.EqualTo(clipsAtATime));
+            Assert.That(result.Fields[2].Inline, Is.EqualTo(true));
+            Assert.That(result.Fields[3].Name, Is.EqualTo("Streamers"));
+            Assert.That(result.Fields[3].Value, Is.EqualTo(streamersText));
             Assert.That(result.Fields[3].Inline, Is.EqualTo(false));
+            Assert.That(result.Fields[4].Name, Is.EqualTo("Need Help?"));
+            Assert.That(result.Fields[4].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[4].Inline, Is.EqualTo(false));
         }
     }
 }
