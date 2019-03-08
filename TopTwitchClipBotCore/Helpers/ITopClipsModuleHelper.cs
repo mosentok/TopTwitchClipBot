@@ -14,7 +14,7 @@ namespace TopTwitchClipBotCore.Helpers
         string DeterminePostWhen(ChannelConfigContainer container);
         string BuildStreamersText(ChannelConfigContainer container);
         string DetermineClipsAtATime(ChannelConfigContainer container);
-        long TicksFromIntervalTime(int interval, Time time);
+        long? TicksFromIntervalTime(int interval, Time time);
         string TimeSpanBetweenClipsAsString(ChannelConfigContainer result);
         Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString);
     }

@@ -86,20 +86,17 @@ namespace TopTwitchClipBotCore.Helpers
             var clipsAtATimeFormat = _ConfigWrapper["ClipsAtATimeFormat"].Replace(newLineDelimiter, "\n");
             return string.Format(clipsAtATimeFormat, output);
         }
-        public long TicksFromIntervalTime(int interval, Time time)
+        public long? TicksFromIntervalTime(int interval, Time time)
         {
+            if (interval < 1)
+                return null;
             switch (time)
             {
                 case Time.Minute:
                 case Time.Minutes:
-                    var minInterval = _ConfigWrapper.GetValue<int>("MinInterval");
-                    if (interval < minInterval)
-                        throw new ModuleException($"Needs to be at least {minInterval} minutes.");
                     return TimeSpan.FromMinutes(interval).Ticks;
                 case Time.Hour:
                 case Time.Hours:
-                    if (interval < 1)
-                        throw new ModuleException("Needs to be at least 1 hour.");
                     return TimeSpan.FromHours(interval).Ticks;
                 default:
                     throw new ModuleException($"Invalid time '{time.ToString()}'.");
@@ -113,7 +110,9 @@ namespace TopTwitchClipBotCore.Helpers
             else
             {
                 var timeSpan = TimeSpan.FromTicks(result.TimeSpanBetweenClipsAsTicks.Value);
-                if (timeSpan.TotalMinutes < 60)
+                if (timeSpan.TotalMinutes == 1)
+                    output = $"at least 1 minute";
+                else if (timeSpan.TotalMinutes < 60)
                     output = $"at least {(int)timeSpan.TotalMinutes} minutes";
                 else if (timeSpan.TotalHours == 1)
                     output = "at least 1 hour";

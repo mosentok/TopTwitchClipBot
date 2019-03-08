@@ -118,6 +118,9 @@ namespace TopTwitchClipBotTests.Core
             _ConfigWrapper.VerifyAll();
             Assert.That(result, Is.EqualTo(expectedResult));
         }
+        [TestCase(0, Time.Minutes, null)]
+        [TestCase(0, Time.Hours, null)]
+        [TestCase(1, Time.Minute, 600_000_000)]
         [TestCase(10, Time.Minutes, 6_000_000_000)]
         [TestCase(15, Time.Minutes, 9_000_000_000)]
         [TestCase(20, Time.Minutes, 12_000_000_000)]
@@ -126,25 +129,15 @@ namespace TopTwitchClipBotTests.Core
         [TestCase(2, Time.Hours, 72_000_000_000)]
         [TestCase(3, Time.Hours, 108_000_000_000)]
         [TestCase(4, Time.Hours, 144_000_000_000)]
-        public void TicksFromIntervalTime(int interval, Time time, long expectedResult)
+        public void TicksFromIntervalTime(int interval, Time time, long? expectedResult)
         {
             var result = _TopClipsModuleHelper.TicksFromIntervalTime(interval, time);
             Assert.That(result, Is.EqualTo(expectedResult));
         }
         [Test]
-        public void TicksFromIntervalTime_TooSmall()
-        {
-            const int minInterval = 5;
-            _ConfigWrapper.Setup(s => s.GetValue<int>("MinInterval")).Returns(minInterval);
-            Assert.That(() => _TopClipsModuleHelper.TicksFromIntervalTime(4, Time.Minutes), 
-                Throws.InstanceOf<ModuleException>()
-                .With.Message.EqualTo($"Needs to be at least {minInterval} minutes."));
-            _ConfigWrapper.VerifyAll();
-        }
-        [Test]
         public void TicksFromIntervalTime_InvalidTime()
         {
-            Assert.That(() => _TopClipsModuleHelper.TicksFromIntervalTime(-1, (Time)(-1)),
+            Assert.That(() => _TopClipsModuleHelper.TicksFromIntervalTime(5, (Time)(-1)),
                 Throws.InstanceOf<ModuleException>()
                 .With.Message.EqualTo("Invalid time '-1'."));
         }
