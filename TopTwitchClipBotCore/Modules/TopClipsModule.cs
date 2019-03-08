@@ -81,7 +81,6 @@ namespace TopTwitchClipBotCore.Modules
                 result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id, broadcaster);
             await ReplyAsync(result);
         }
-        //TODO allow user to reset this to null
         [Command("At Least")]
         public async Task AtLeast(int interval, Time time)
         {
