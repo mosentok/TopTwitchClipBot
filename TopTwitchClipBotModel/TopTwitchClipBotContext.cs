@@ -41,6 +41,7 @@ namespace TopTwitchClipBotModel
                 channelConfig.Prefix = container.Prefix;
                 channelConfig.MinPostingHour = container.MinPostingHour;
                 channelConfig.MaxPostingHour = container.MaxPostingHour;
+                channelConfig.NumberOfClipsAtATime = container.NumberOfClipsAtATime;
             }
             else
             {
@@ -48,7 +49,8 @@ namespace TopTwitchClipBotModel
                 {
                     Prefix = container.Prefix,
                     MinPostingHour = container.MinPostingHour,
-                    MaxPostingHour = container.MaxPostingHour
+                    MaxPostingHour = container.MaxPostingHour,
+                    NumberOfClipsAtATime = container.NumberOfClipsAtATime
                 };
                 ChannelConfigs.Add(channelConfig);
             }
@@ -102,19 +104,27 @@ namespace TopTwitchClipBotModel
             await SaveChangesAsync();
             return containers;
         }
-        public async Task<List<PendingBroadcasterConfig>> GetBroadcasterConfigsAsync(int nowHour)
+        public async Task<List<PendingChannelConfigContainer>> PendingGetChannelConfigsAsync(int nowHour)
         {
-            return await (from s in BroadcasterConfigs
-                          where s.ChannelConfig.MinPostingHour == null || s.ChannelConfig.MaxPostingHour == null ||
-                               (s.ChannelConfig.MinPostingHour < s.ChannelConfig.MaxPostingHour && s.ChannelConfig.MinPostingHour <= nowHour && nowHour < s.ChannelConfig.MaxPostingHour) || //if the range spans inside a single day, then now hour must be between min and max, else...
-                               (s.ChannelConfig.MinPostingHour > s.ChannelConfig.MaxPostingHour && (s.ChannelConfig.MinPostingHour <= nowHour || nowHour < s.ChannelConfig.MaxPostingHour))
-                          select new PendingBroadcasterConfig
+            return await (from s in ChannelConfigs
+                          where s.MinPostingHour == null || s.MaxPostingHour == null ||
+                               (s.MinPostingHour < s.MaxPostingHour && s.MinPostingHour <= nowHour && nowHour < s.MaxPostingHour) || //if the range spans inside a single day, then now hour must be between min and max, else...
+                               (s.MinPostingHour > s.MaxPostingHour && (s.MinPostingHour <= nowHour || nowHour < s.MaxPostingHour))
+                          select new PendingChannelConfigContainer
                           {
-                              Id = s.Id,
                               ChannelId = s.ChannelId,
-                              Broadcaster = s.Broadcaster,
-                              NumberOfClipsPerDay = s.NumberOfClipsPerDay,
-                              ExistingHistories = s.BroadcasterHistories.Select(t => new BroadcasterHistoryContainer(s.ChannelId, t)).ToList()
+                              Prefix = s.Prefix,
+                              MinPostingHour = s.MinPostingHour,
+                              MaxPostingHour = s.MaxPostingHour,
+                              NumberOfClipsAtATime = s.NumberOfClipsAtATime,
+                              Broadcasters = s.BroadcasterConfigs.Select(t => new PendingBroadcasterConfig
+                              {
+                                  Id = t.Id,
+                                  Broadcaster = t.Broadcaster,
+                                  ChannelId = t.ChannelId,
+                                  NumberOfClipsPerDay = t.NumberOfClipsPerDay,
+                                  ExistingHistories = t.BroadcasterHistories.Select(u => new BroadcasterHistoryContainer(t.ChannelId, u)).ToList()
+                              }).ToList()
                           }).ToListAsync();
         }
         public async Task DeleteBroadcasterConfigAsync(decimal channelId)

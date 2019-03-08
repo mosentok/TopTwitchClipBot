@@ -79,6 +79,14 @@ namespace TopTwitchClipBotCore.Modules
                 result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id, broadcaster);
             await ReplyAsync(result);
         }
+        [Command("At A Time")]
+        public async Task AtATime(int numberOfClipsAtATime)
+        {
+            var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
+            var container = new ChannelConfigContainer(match, numberOfClipsAtATime);
+            var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+            await ReplyAsync(result);
+        }
         async Task ReplyAsync(ChannelConfigContainer result)
         {
             var streamersText = _TopClipsModuleHelper.BuildStreamersText(result);

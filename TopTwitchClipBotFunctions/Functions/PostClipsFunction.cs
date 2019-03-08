@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -19,7 +18,8 @@ namespace TopTwitchClipBotFunctions.Functions
             var accept = Environment.GetEnvironmentVariable("TwitchAcceptHeaderValue");
             var botToken = Environment.GetEnvironmentVariable("BotToken");
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
-            var yesterday = DateTime.Now.AddDays(-1);
+            var now = DateTime.Now;
+            var yesterday = now.AddDays(-1);
             var logWrapper = new LoggerWrapper(log);
             using (var twitchWrapper = new TwitchWrapper())
             using (var discordWrapper = new DiscordWrapper(botToken))
@@ -28,9 +28,10 @@ namespace TopTwitchClipBotFunctions.Functions
                 var helper = new PostClipsHelper(logWrapper, context, twitchWrapper, discordWrapper);
                 logWrapper.LogInformation("Posting clips.");
                 await discordWrapper.LogInAsync();
-                var containers = await context.GetBroadcasterConfigsAsync(DateTime.Now.Hour);
-                var containersReadyToPost = containers.Where(s => helper.IsReadyToPost(s.NumberOfClipsPerDay, s.ExistingHistories, yesterday)).ToList();
-                var pendingClipContainers = await helper.BuildClipContainers(topClipsEndpoint, clientId, accept, containersReadyToPost);
+                var containers = await context.PendingGetChannelConfigsAsync(now.Hour);
+                var readyToPostContainers = helper.ReadyToPostContainers(containers, yesterday);
+                var atATimeContainers = helper.AtATimeContainers(readyToPostContainers);
+                var pendingClipContainers = await helper.BuildClipContainers(topClipsEndpoint, clientId, accept, atATimeContainers);
                 var insertedHistories = await helper.InsertHistories(pendingClipContainers);
                 var channelContainers = await helper.BuildChannelContainers(insertedHistories);
                 foreach (var channelContainer in channelContainers)
