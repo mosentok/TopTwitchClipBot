@@ -91,7 +91,8 @@ namespace TopTwitchClipBotCore.Modules
         {
             var streamersText = _TopClipsModuleHelper.BuildStreamersText(result);
             var postWhen = _TopClipsModuleHelper.DeterminePostWhen(result);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText);
+            var clipsAtATime = _TopClipsModuleHelper.DetermineClipsAtATime(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime);
             await ReplyAsync(message: string.Empty, embed: embed);
         }
     }
