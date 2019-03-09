@@ -94,7 +94,7 @@ namespace TopTwitchClipBotCore.Modules
             }
             catch (ModuleException ex)
             {
-                await ReplyAsync(message: ex.Message);
+                _Log.LogError(ex, $"Error setting channel ID '{Context.Channel.Id}' interval '{interval}' time '{time.ToString()}'.");
             }
         }
         //TODO need to allow user to reset this to null
