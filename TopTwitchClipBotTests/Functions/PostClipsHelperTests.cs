@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Discord;
+using Moq;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -68,6 +69,22 @@ namespace TopTwitchClipBotTests.Functions
             var result = results[0];
             Assert.That(result.Clips, Is.EqualTo(clips));
             Assert.That(result.Broadcaster, Is.EqualTo(broadcaster));
+        }
+        [TestCase("a title", 123, 456.78f, "2019-02-12T12:34:56", "https://twitch.tv/clip",
+            "**Title** a title\r\n**Views** 123\r\n**Duration** 456.78\r\n**Created at** 2/12/2019 12:34:56 PM UTC\r\nhttps://twitch.tv/clip")]
+        public async Task SendMessagesAsync(string title, int views, float duration, string createdAtString, string clipUrl, string expectedMessage)
+        {
+            var createdAt = DateTime.Parse(createdAtString);
+            var channel = new Mock<IMessageChannel>();
+            var insertedContainer = new InsertedBroadcasterHistoryContainer { ClipUrl = clipUrl, Title = title, Views = views, Duration = duration, CreatedAt = createdAt };
+            var userMessage = new Mock<IUserMessage>();
+            channel.Setup(s => s.SendMessageAsync(expectedMessage, false, null, null)).ReturnsAsync(userMessage.Object);
+            var inserted = new List<InsertedBroadcasterHistoryContainer> { insertedContainer };
+            var channelContainer = new ChannelContainer(inserted, channel.Object);
+            var task = _Helper.SendMessagesAsync(channelContainer);
+            await task;
+            channel.VerifyAll();
+            Assert.That(task.IsCompletedSuccessfully, Is.True);
         }
     }
 }

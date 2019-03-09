@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using TopTwitchClipBotFunctions.Models;
 using TopTwitchClipBotFunctions.Wrappers;
@@ -104,9 +105,10 @@ namespace TopTwitchClipBotFunctions.Helpers
                     }
             return pendingClipContainers;
         }
-        public async Task<List<BroadcasterHistoryContainer>> InsertHistories(List<PendingClipContainer> pendingClipContainers)
+        public async Task<List<InsertedBroadcasterHistoryContainer>> InsertHistories(List<PendingClipContainer> pendingClipContainers)
         {
             var historyContainers = new List<BroadcasterHistoryContainer>();
+            var inserted = new List<InsertedBroadcasterHistoryContainer>();
             foreach (var clipContainer in pendingClipContainers)
             {
                 var firstUnseenClip = clipContainer.Clips.FirstOrDefault(t => !clipContainer.ExistingHistories.Any(u => u.Slug == t.Slug));
@@ -121,11 +123,14 @@ namespace TopTwitchClipBotFunctions.Helpers
                         Stamp = DateTime.Now
                     };
                     historyContainers.Add(historyContainer);
+                    var insertedContainer = new InsertedBroadcasterHistoryContainer(clipContainer.ChannelId, historyContainer, firstUnseenClip.Title, firstUnseenClip.Views, firstUnseenClip.Duration, firstUnseenClip.CreatedAt);
+                    inserted.Add(insertedContainer);
                 }
             }
-            return await _Context.InsertBroadcasterHistoriesAsync(historyContainers);
+            await _Context.InsertBroadcasterHistoriesAsync(historyContainers);
+            return inserted;
         }
-        public async Task<List<ChannelContainer>> BuildChannelContainers(List<BroadcasterHistoryContainer> insertedHistories)
+        public async Task<List<ChannelContainer>> BuildChannelContainers(List<InsertedBroadcasterHistoryContainer> insertedHistories)
         {
             var groupedHistories = insertedHistories.ToLookup(s => s.ChannelId);
             var channelContainers = new List<ChannelContainer>();
@@ -136,6 +141,20 @@ namespace TopTwitchClipBotFunctions.Helpers
                 channelContainers.Add(channelContainer);
             }
             return channelContainers;
+        }
+        public async Task SendMessagesAsync(ChannelContainer channelContainer)
+        {
+            foreach (var insertedContainer in channelContainer.Inserted)
+            {
+                var message = new StringBuilder()
+                    .AppendLine($"**Title** {insertedContainer.Title}")
+                    .AppendLine($"**Views** {insertedContainer.Views}")
+                    .AppendLine($"**Duration** {insertedContainer.Duration.ToString("N2")}")
+                    .AppendLine($"**Created at** {insertedContainer.CreatedAt} UTC")
+                    .Append(insertedContainer.ClipUrl)
+                    .ToString();
+                await channelContainer.Channel.SendMessageAsync(text: message);
+            }
         }
     }
 }
