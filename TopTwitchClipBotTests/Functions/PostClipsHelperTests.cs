@@ -77,20 +77,13 @@ namespace TopTwitchClipBotTests.Functions
             var createdAt = DateTime.Parse(createdAtString);
             var channel = new Mock<IMessageChannel>();
             var insertedContainer = new InsertedBroadcasterHistoryContainer { ClipUrl = clipUrl, Title = title, Views = views, Duration = duration, CreatedAt = createdAt };
-            var userMessage = new Mock<IUserMessage>();
-            channel.Setup(s => s.SendMessageAsync(expectedMessage, It.IsAny<bool>(), It.IsAny<Embed>(), It.IsAny<RequestOptions>())).ReturnsAsync(userMessage.Object);
+            IUserMessage userMessage = null;
+            channel.Setup(s => s.SendMessageAsync(expectedMessage, It.IsAny<bool>(), It.IsAny<Embed>(), It.IsAny<RequestOptions>())).ReturnsAsync(userMessage);
             var inserted = new List<InsertedBroadcasterHistoryContainer> { insertedContainer };
             var channelContainer = new ChannelContainer(inserted, channel.Object);
             var task = _Helper.SendMessagesAsync(channelContainer);
             await task;
-            /*
-             * TODO
-             * 
-             * VerifyAll fails the test when ran in the cloud:
-             * 
-             *  Moq.MockException : The following setups on mock 'Mock<Discord.IMessageChannel:00000002>' were not matched.
-             */
-            //channel.VerifyAll();
+            channel.VerifyAll();
             Assert.That(task.IsCompletedSuccessfully, Is.True);
         }
     }
