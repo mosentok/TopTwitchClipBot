@@ -22,6 +22,9 @@ steps:
 - script: dotnet reportgenerator -reports:./TestResults/coverage.cobertura.xml -reportTypes:htmlInline_azurePipelines_dark -targetdir:./TestResults
   workingDirectory: $(Build.SourcesDirectory)/TopTwitchClipBotTests
   displayName: Generate Coverage Report
+- script: dotnet ef migrations script -p ./TopTwitchClipBotModel.csproj -o ./Migrations/migration-script.sql -i
+  workingDirectory: $(Build.SourcesDirectory)/TopTwitchClipBotModel
+  displayName: Create Migration Script
 - task: PublishCodeCoverageResults@1
   inputs:
     codeCoverageTool: Cobertura
@@ -30,6 +33,13 @@ steps:
   displayName: Publish Coverage Report
 - script: dotnet build $(Build.SourcesDirectory)/TopTwitchClipBot.sln --configuration Release
   displayName: Build in Release Mode
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: $(Build.SourcesDirectory)/TopTwitchClipBotModel/Migrations/migration-script.sql
+    ArtifactName: MigrationDrop
+    publishLocation: Container
+    TargetPath: null
+  displayName: Publish Migration Artifacts
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: $(Build.SourcesDirectory)/TopTwitchClipBotCore/bin/Release/netcoreapp2.2
