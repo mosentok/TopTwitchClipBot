@@ -78,7 +78,7 @@ namespace TopTwitchClipBotTests.Functions
             var channel = new Mock<IMessageChannel>();
             var insertedContainer = new InsertedBroadcasterHistoryContainer { ClipUrl = clipUrl, Title = title, Views = views, Duration = duration, CreatedAt = createdAt };
             var userMessage = new Mock<IUserMessage>();
-            channel.Setup(s => s.SendMessageAsync(expectedMessage, false, null, null)).ReturnsAsync(userMessage.Object);
+            channel.Setup(s => s.SendMessageAsync(expectedMessage, It.IsAny<bool>(), It.IsAny<Embed>(), It.IsAny<RequestOptions>())).ReturnsAsync(userMessage.Object);
             var inserted = new List<InsertedBroadcasterHistoryContainer> { insertedContainer };
             var channelContainer = new ChannelContainer(inserted, channel.Object);
             var task = _Helper.SendMessagesAsync(channelContainer);
