@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using TopTwitchClipBotCore.Enums;
+using TopTwitchClipBotCore.Exceptions;
 using TopTwitchClipBotCore.Helpers;
 using TopTwitchClipBotCore.Wrappers;
 using TopTwitchClipBotModel;
@@ -34,7 +36,7 @@ namespace TopTwitchClipBotCore.Modules
             if (shouldTurnCommandOff)
             {
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-                var container = new ChannelConfigContainer(match, null, null);
+                var container = match.FromPostingHours(null, null);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
                 await ReplyAsync(result);
             }
@@ -48,7 +50,7 @@ namespace TopTwitchClipBotCore.Modules
                 if (!(minInRange && maxInRange) || minPostingHour == maxPostingHour)
                     return;
                 var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-                var container = new ChannelConfigContainer(match, minPostingHour, maxPostingHour);
+                var container = match.FromPostingHours(minPostingHour, maxPostingHour);
                 var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
                 await ReplyAsync(result);
             }
@@ -79,11 +81,28 @@ namespace TopTwitchClipBotCore.Modules
                 result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id, broadcaster);
             await ReplyAsync(result);
         }
+        [Command("At Least")]
+        public async Task AtLeast(int interval, Time time)
+        {
+            try
+            {
+                var ticks = _TopClipsModuleHelper.TicksFromIntervalTime(interval, time);
+                var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
+                var container = match.FromTimeSpanBetweenClipsAsTicks(ticks);
+                var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+                await ReplyAsync(result);
+            }
+            catch (ModuleException ex)
+            {
+                _Log.LogError(ex, $"Error setting channel ID '{Context.Channel.Id}' interval '{interval}' time '{time.ToString()}'.");
+            }
+        }
+        //TODO need to allow user to reset this to null
         [Command("At A Time")]
         public async Task AtATime(int numberOfClipsAtATime)
         {
             var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            var container = new ChannelConfigContainer(match, numberOfClipsAtATime);
+            var container = match.FromClipsAtATime(numberOfClipsAtATime);
             var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
             await ReplyAsync(result);
         }
@@ -92,7 +111,8 @@ namespace TopTwitchClipBotCore.Modules
             var streamersText = _TopClipsModuleHelper.BuildStreamersText(result);
             var postWhen = _TopClipsModuleHelper.DeterminePostWhen(result);
             var clipsAtATime = _TopClipsModuleHelper.DetermineClipsAtATime(result);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime);
+            var timeSpanString = _TopClipsModuleHelper.TimeSpanBetweenClipsAsString(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString);
             await ReplyAsync(message: string.Empty, embed: embed);
         }
     }

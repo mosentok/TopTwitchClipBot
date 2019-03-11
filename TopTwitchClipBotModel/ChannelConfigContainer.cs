@@ -10,6 +10,7 @@ namespace TopTwitchClipBotModel
         public int? MinPostingHour { get; set; }
         public int? MaxPostingHour { get; set; }
         public int? NumberOfClipsAtATime { get; set; }
+        public long? TimeSpanBetweenClipsAsTicks { get; set; }
         public List<BroadcasterConfigContainer> Broadcasters { get; set; }
         public ChannelConfigContainer() { }
         public ChannelConfigContainer(ChannelConfig channelConfig)
@@ -19,23 +20,45 @@ namespace TopTwitchClipBotModel
             MinPostingHour = channelConfig.MinPostingHour;
             MaxPostingHour = channelConfig.MaxPostingHour;
             NumberOfClipsAtATime = channelConfig.NumberOfClipsAtATime;
+            TimeSpanBetweenClipsAsTicks = channelConfig.TimeSpanBetweenClipsAsTicks;
             Broadcasters = channelConfig.BroadcasterConfigs.Select(s => new BroadcasterConfigContainer(s)).ToList();
         }
-        public ChannelConfigContainer(ChannelConfigContainer basedOn, int? minPostingHour, int? maxPostingHour)
+        public ChannelConfigContainer FromPostingHours(int? minPostingHour, int? maxPostingHour)
         {
-            ChannelId = basedOn.ChannelId;
-            Prefix = basedOn.Prefix;
-            MinPostingHour = minPostingHour;
-            MaxPostingHour = maxPostingHour;
-            NumberOfClipsAtATime = basedOn.NumberOfClipsAtATime;
+            return new ChannelConfigContainer
+            {
+                ChannelId = ChannelId,
+                Prefix = Prefix,
+                MinPostingHour = minPostingHour,
+                MaxPostingHour = maxPostingHour,
+                NumberOfClipsAtATime = NumberOfClipsAtATime,
+                TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks
+            };
         }
-        public ChannelConfigContainer(ChannelConfigContainer basedOn, int numberOfClipsAtATime)
+        //TODO int should be int?
+        public ChannelConfigContainer FromClipsAtATime(int numberOfClipsAtATime)
         {
-            ChannelId = basedOn.ChannelId;
-            Prefix = basedOn.Prefix;
-            MinPostingHour = basedOn.MinPostingHour;
-            MaxPostingHour = basedOn.MaxPostingHour;
-            NumberOfClipsAtATime = numberOfClipsAtATime;
+            return new ChannelConfigContainer
+            {
+                ChannelId = ChannelId,
+                Prefix = Prefix,
+                MinPostingHour = MinPostingHour,
+                MaxPostingHour = MaxPostingHour,
+                NumberOfClipsAtATime = numberOfClipsAtATime,
+                TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks
+            };
+        }
+        public ChannelConfigContainer FromTimeSpanBetweenClipsAsTicks(long? timeSpanBetweenClipsAsTicks)
+        {
+            return new ChannelConfigContainer
+            {
+                ChannelId = ChannelId,
+                Prefix = Prefix,
+                MinPostingHour = MinPostingHour,
+                MaxPostingHour = MaxPostingHour,
+                NumberOfClipsAtATime = NumberOfClipsAtATime,
+                TimeSpanBetweenClipsAsTicks = timeSpanBetweenClipsAsTicks
+            };
         }
     }
 }

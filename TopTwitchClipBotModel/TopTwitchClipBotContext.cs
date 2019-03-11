@@ -42,6 +42,7 @@ namespace TopTwitchClipBotModel
                 channelConfig.MinPostingHour = container.MinPostingHour;
                 channelConfig.MaxPostingHour = container.MaxPostingHour;
                 channelConfig.NumberOfClipsAtATime = container.NumberOfClipsAtATime;
+                channelConfig.TimeSpanBetweenClipsAsTicks = container.TimeSpanBetweenClipsAsTicks;
             }
             else
             {
@@ -50,8 +51,9 @@ namespace TopTwitchClipBotModel
                     Prefix = container.Prefix,
                     MinPostingHour = container.MinPostingHour,
                     MaxPostingHour = container.MaxPostingHour,
-                    NumberOfClipsAtATime = container.NumberOfClipsAtATime
-                };
+                    NumberOfClipsAtATime = container.NumberOfClipsAtATime,
+                    TimeSpanBetweenClipsAsTicks = container.TimeSpanBetweenClipsAsTicks
+            };
                 ChannelConfigs.Add(channelConfig);
             }
             await SaveChangesAsync();
@@ -104,7 +106,7 @@ namespace TopTwitchClipBotModel
             await SaveChangesAsync();
             return containers;
         }
-        public async Task<List<PendingChannelConfigContainer>> PendingGetChannelConfigsAsync(int nowHour)
+        public async Task<List<PendingChannelConfigContainer>> GetPendingChannelConfigsAsync(int nowHour)
         {
             return await (from s in ChannelConfigs
                           where s.MinPostingHour == null || s.MaxPostingHour == null ||
@@ -117,6 +119,7 @@ namespace TopTwitchClipBotModel
                               MinPostingHour = s.MinPostingHour,
                               MaxPostingHour = s.MaxPostingHour,
                               NumberOfClipsAtATime = s.NumberOfClipsAtATime,
+                              TimeSpanBetweenClipsAsTicks = s.TimeSpanBetweenClipsAsTicks,
                               Broadcasters = s.BroadcasterConfigs.Select(t => new PendingBroadcasterConfig
                               {
                                   Id = t.Id,
