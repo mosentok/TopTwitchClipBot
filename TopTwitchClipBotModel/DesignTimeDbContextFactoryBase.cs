@@ -23,19 +23,17 @@ namespace TopTwitchClipBotModel
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(basePath)
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.json", true)
                 .AddJsonFile($"appsettings.{environmentName}.json", true)
                 .AddEnvironmentVariables();
             var config = builder.Build();
             var connstr = config.GetConnectionString("default");
-            if (string.IsNullOrWhiteSpace(connstr) == true)
-                throw new InvalidOperationException("Could not find a connection string named 'default'.");
+            if (string.IsNullOrEmpty(connstr))
+                connstr = "Server=notprovided";
             return Create(connstr);
         }
         TContext Create(string connectionString)
         {
-            if (string.IsNullOrEmpty(connectionString))
-                throw new ArgumentException($"{nameof(connectionString)} is null or empty.", nameof(connectionString));
             var optionsBuilder = new DbContextOptionsBuilder<TContext>();
             Console.WriteLine($"Connection string: {connectionString}");
             optionsBuilder.UseSqlServer(connectionString, s => s.CommandTimeout((int)TimeSpan.FromMinutes(10).TotalSeconds));
