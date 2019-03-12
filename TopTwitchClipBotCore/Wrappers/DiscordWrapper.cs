@@ -67,5 +67,9 @@ namespace TopTwitchClipBotCore.Wrappers
             _LoggedOutSource.SetResult(true);
             return Task.CompletedTask;
         }
+        public async Task SetGameAsync(string playingGame)
+        {
+            await _DiscordClient.SetGameAsync(playingGame);
+        }
     }
 }

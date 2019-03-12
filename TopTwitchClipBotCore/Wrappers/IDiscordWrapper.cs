@@ -13,5 +13,6 @@ namespace TopTwitchClipBotCore.Wrappers
         Task StartAsync();
         void AddMessageReceivedHandler(Func<SocketMessage, Task> handler);
         void AddLogHandler(Func<LogMessage, Task> handler);
+        Task SetGameAsync(string playingGame);
     }
 }

@@ -41,6 +41,8 @@ namespace TopTwitchClipBotCore
             _ModuleNames = DetermineModuleNames();
             _PrefixDictionary = new Dictionary<decimal, string>(); //TODO
             _DiscordWrapper.AddMessageReceivedHandler(MessageReceived);
+            var playingGame = _ConfigWrapper["PlayingGame"];
+            await _DiscordWrapper.SetGameAsync(playingGame);
         }
         List<string> DetermineModuleNames()
         {
