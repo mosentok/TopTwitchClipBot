@@ -10,7 +10,7 @@ using TopTwitchClipBotModel;
 
 namespace TopTwitchClipBotCore.Modules
 {
-    [Group("TopClips")]
+    [Group("Top Clips")]
     public class TopClipsModule : ModuleBase
     {
         readonly ITopClipsModuleHelper _TopClipsModuleHelper;
@@ -81,8 +81,8 @@ namespace TopTwitchClipBotCore.Modules
                 result = await _FunctionWrapper.DeleteChannelTopClipConfigAsync(Context.Channel.Id, broadcaster);
             await ReplyAsync(result);
         }
-        [Command("At Least")]
-        public async Task AtLeast(int interval, Time time)
+        [Command("Time Between Clips")]
+        public async Task TimeBetweenClips(int interval, Time time)
         {
             try
             {
