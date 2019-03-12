@@ -33,6 +33,9 @@ steps:
   displayName: Publish Coverage Report
 - script: dotnet build $(Build.SourcesDirectory)/TopTwitchClipBot.sln --configuration Release
   displayName: Build in Release Mode
+- script: dotnet publish ./TopTwitchClipBotCore.csproj --configuration Release --output ./Artifacts/App_Data/Jobs/Continuous/TopTwitchClipBotCore
+  workingDirectory: $(Build.SourcesDirectory)/TopTwitchClipBotCore
+  displayName: Publish Console App
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: $(Build.SourcesDirectory)/TopTwitchClipBotModel/Migrations/migration-script.sql
@@ -42,7 +45,7 @@ steps:
   displayName: Publish Migration Artifacts
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: $(Build.SourcesDirectory)/TopTwitchClipBotCore/bin/Release/netcoreapp2.2
+    PathtoPublish: $(Build.SourcesDirectory)/TopTwitchClipBotCore/Artifacts
     ArtifactName: CoreDrop
     publishLocation: Container
     TargetPath: null
