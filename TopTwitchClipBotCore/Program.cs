@@ -14,7 +14,7 @@ namespace TopTwitchClipBotCore
         {
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.json", true)
                 .AddEnvironmentVariables()
                 .Build();
             var configWrapper = new ConfigurationWrapper(config);
