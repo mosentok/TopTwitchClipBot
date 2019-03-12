@@ -1,1 +1,1 @@
-﻿dotnet TopTwitchClipBotCore.dll %*
+dotnet TopTwitchClipBotCore.dll %*
