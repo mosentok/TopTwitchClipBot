@@ -71,7 +71,7 @@ namespace TopTwitchClipBotTests.Functions
             Assert.That(result.Broadcaster, Is.EqualTo(broadcaster));
         }
         [TestCase("a title", 123, 456.78f, "2019-02-12T12:34:56", "https://twitch.tv/clip",
-            "**Title** a title\r\n**Views** 123\r\n**Duration** 456.78\r\n**Created at** 2/12/2019 12:34:56 PM UTC\r\nhttps://twitch.tv/clip")]
+            "**a title**\r\n**123** views, **456.78s** long, created at **2/12/2019 12:34:56 PM UTC**\r\nhttps://twitch.tv/clip")]
         public async Task SendMessagesAsync(string title, int views, float duration, string createdAtString, string clipUrl, string expectedMessage)
         {
             var createdAt = DateTime.Parse(createdAtString);

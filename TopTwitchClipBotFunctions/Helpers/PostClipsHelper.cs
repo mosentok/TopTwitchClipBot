@@ -147,10 +147,10 @@ namespace TopTwitchClipBotFunctions.Helpers
             foreach (var insertedContainer in channelContainer.Inserted)
             {
                 var message = new StringBuilder()
-                    .AppendLine($"**Title** {insertedContainer.Title}")
-                    .AppendLine($"**Views** {insertedContainer.Views}")
-                    .AppendLine($"**Duration** {insertedContainer.Duration.ToString("N2")}")
-                    .AppendLine($"**Created at** {insertedContainer.CreatedAt} UTC")
+                    .AppendLine($"**{insertedContainer.Title}**")
+                    .Append($"**{insertedContainer.Views}** views, ")
+                    .Append($"**{insertedContainer.Duration.ToString("N0")}s** long, ")
+                    .AppendLine($"created at **{insertedContainer.CreatedAt} UTC**")
                     .Append(insertedContainer.ClipUrl)
                     .ToString();
                 await channelContainer.Channel.SendMessageAsync(text: message);
