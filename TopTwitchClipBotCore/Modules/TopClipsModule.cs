@@ -97,12 +97,16 @@ namespace TopTwitchClipBotCore.Modules
                 _Log.LogError(ex, $"Error setting channel ID '{Context.Channel.Id}' interval '{interval}' time '{time.ToString()}'.");
             }
         }
-        //TODO need to allow user to reset this to null
+        //TODO consider special string input like "reset"
         [Command("At A Time")]
         public async Task AtATime(int numberOfClipsAtATime)
         {
             var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            var container = match.FromClipsAtATime(numberOfClipsAtATime);
+            ChannelConfigContainer container;
+            if (numberOfClipsAtATime > 0)
+                container = match.FromClipsAtATime(numberOfClipsAtATime);
+            else
+                container = match.FromClipsAtATime(null);
             var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
             await ReplyAsync(result);
         }

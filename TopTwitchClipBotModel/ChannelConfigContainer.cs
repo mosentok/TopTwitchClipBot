@@ -35,8 +35,7 @@ namespace TopTwitchClipBotModel
                 TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks
             };
         }
-        //TODO int should be int?
-        public ChannelConfigContainer FromClipsAtATime(int numberOfClipsAtATime)
+        public ChannelConfigContainer FromClipsAtATime(int? numberOfClipsAtATime)
         {
             return new ChannelConfigContainer
             {
