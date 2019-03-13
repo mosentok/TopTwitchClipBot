@@ -37,7 +37,10 @@ namespace TopTwitchClipBotFunctions.Helpers
         {
             if (!channelContainer.TimeSpanBetweenClipsAsTicks.HasValue)
                 return true;
-            var latestHistoryStamp = channelContainer.Broadcasters.SelectMany(s => s.ExistingHistories).Max(s => s.Stamp);
+            var histories = channelContainer.Broadcasters.SelectMany(s => s.ExistingHistories);
+            if (!histories.Any())
+                return true;
+            var latestHistoryStamp = histories.Max(s => s.Stamp);
             var timeSinceLastPost = now - latestHistoryStamp;
             return timeSinceLastPost.Ticks >= channelContainer.TimeSpanBetweenClipsAsTicks.Value;
         }
