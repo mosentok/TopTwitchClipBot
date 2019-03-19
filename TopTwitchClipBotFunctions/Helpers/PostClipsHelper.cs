@@ -95,18 +95,39 @@ namespace TopTwitchClipBotFunctions.Helpers
                 foreach (var broadcasterContainer in channelContainer.Broadcasters)
                     if (clipsCache.ContainsKey(broadcasterContainer.Broadcaster))
                     {
-                        var pendingClipContainer = new PendingClipContainer(broadcasterContainer, clipsCache[broadcasterContainer.Broadcaster]);
+                        var pendingClipContainer = new PendingClipContainer(broadcasterContainer, clipsCache[broadcasterContainer.Broadcaster], channelContainer.GlobalMinViews);
                         pendingClipContainers.Add(pendingClipContainer);
                     }
                     else
                     {
                         var channelEndpoint = $"{topClipsEndpoint}&channel={broadcasterContainer.Broadcaster}";
                         var response = await _TwitchWrapper.GetClips(channelEndpoint, clientId, accept);
-                        var pendingClipContainer = new PendingClipContainer(broadcasterContainer, response);
+                        var pendingClipContainer = new PendingClipContainer(broadcasterContainer, response, channelContainer.GlobalMinViews);
                         pendingClipContainers.Add(pendingClipContainer);
                         clipsCache.Add(broadcasterContainer.Broadcaster, response);
                     }
             return pendingClipContainers;
+        }
+        public List<PendingClipContainer> ClipsWithMinViews(List<PendingClipContainer> pendingClipContainers)
+        {
+            var results = new List<PendingClipContainer>();
+            foreach (var pendingClipContainer in pendingClipContainers)
+                if (pendingClipContainer.MinViews.HasValue)
+                    TryAddResult(pendingClipContainer, pendingClipContainer.MinViews.Value);
+                else if (pendingClipContainer.GlobalMinViews.HasValue)
+                    TryAddResult(pendingClipContainer, pendingClipContainer.GlobalMinViews.Value);
+                else
+                    results.Add(pendingClipContainer);
+            void TryAddResult(PendingClipContainer pendingClipContainer, int minViews)
+            {
+                var clips = pendingClipContainer.Clips.Where(s => s.Views >= minViews).ToList();
+                if (clips.Any())
+                {
+                    var result = pendingClipContainer.FromClips(clips);
+                    results.Add(result);
+                }
+            }
+            return results;
         }
         public async Task<List<InsertedBroadcasterHistoryContainer>> InsertHistories(List<PendingClipContainer> pendingClipContainers)
         {

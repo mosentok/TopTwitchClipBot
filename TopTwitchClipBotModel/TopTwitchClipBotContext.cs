@@ -120,12 +120,14 @@ namespace TopTwitchClipBotModel
                               MaxPostingHour = s.MaxPostingHour,
                               NumberOfClipsAtATime = s.NumberOfClipsAtATime,
                               TimeSpanBetweenClipsAsTicks = s.TimeSpanBetweenClipsAsTicks,
+                              GlobalMinViews = s.GlobalMinViews,
                               Broadcasters = s.BroadcasterConfigs.Select(t => new PendingBroadcasterConfig
                               {
                                   Id = t.Id,
                                   Broadcaster = t.Broadcaster,
                                   ChannelId = t.ChannelId,
                                   NumberOfClipsPerDay = t.NumberOfClipsPerDay,
+                                  MinViews = t.MinViews,
                                   ExistingHistories = t.BroadcasterHistories.Select(u => new BroadcasterHistoryContainer(t.ChannelId, u)).ToList()
                               }).ToList()
                           }).ToListAsync();

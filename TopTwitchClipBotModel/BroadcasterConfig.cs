@@ -15,6 +15,7 @@ namespace TopTwitchClipBotModel
         [Column(TypeName = "varchar(50)")]
         public string Broadcaster { get; set; }
         public int? NumberOfClipsPerDay { get; set; }
+        public int? MinViews { get; set; }
         public virtual ChannelConfig ChannelConfig { get; set; }
         public virtual ICollection<BroadcasterHistory> BroadcasterHistories { get; set; }
     }
