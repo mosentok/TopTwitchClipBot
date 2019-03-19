@@ -70,6 +70,23 @@ namespace TopTwitchClipBotTests.Functions
             Assert.That(result.Clips, Is.EqualTo(clips));
             Assert.That(result.Broadcaster, Is.EqualTo(broadcaster));
         }
+        [TestCase(1, 1, 1, 1)]
+        [TestCase(1, null, 1, 1)]
+        [TestCase(1, 1, null, 1)]
+        [TestCase(1, 2, 2, 0)]
+        [TestCase(1, null, 2, 0)]
+        [TestCase(1, 2, null, 0)]
+        [TestCase(1, null, null, 1)]
+        public void ClipsWithMinViews(int clipViews, int? globalMinViews, int? minViews, int expectedResult)
+        {
+            const int id = 123;
+            var clip = new Clip { Views = clipViews };
+            var clips = new List<Clip> { clip };
+            var pendingClipContainer = new PendingClipContainer { Id = id, GlobalMinViews = globalMinViews, MinViews = minViews, Clips = clips };
+            var pendingClipContainers = new List<PendingClipContainer> { pendingClipContainer };
+            var results = _Helper.ClipsWithMinViews(pendingClipContainers);
+            Assert.That(results.Count(s => s.Id == id), Is.EqualTo(expectedResult));
+        }
         [TestCase("a title", 123, 456.78f, "2019-02-12T12:34:56", "https://twitch.tv/clip",
             "**a title**\r\n**123** views, **456.78s** long, created at **2/12/2019 12:34:56 PM UTC**\r\nhttps://twitch.tv/clip")]
         public async Task SendMessagesAsync(string title, int views, float duration, string createdAtString, string clipUrl, string expectedMessage)
