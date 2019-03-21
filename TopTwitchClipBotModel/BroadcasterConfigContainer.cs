@@ -14,5 +14,25 @@
             NumberOfClipsPerDay = broadcasterConfig.NumberOfClipsPerDay;
             MinViews = broadcasterConfig.MinViews;
         }
+        public BroadcasterConfigContainer FromClipsPerDay(int? numberOfClipsPerDay)
+        {
+            return new BroadcasterConfigContainer
+            {
+                ChannelId = ChannelId,
+                Broadcaster = Broadcaster,
+                NumberOfClipsPerDay = numberOfClipsPerDay,
+                MinViews = MinViews
+            };
+        }
+        public BroadcasterConfigContainer FromMinViews(int? minViews)
+        {
+            return new BroadcasterConfigContainer
+            {
+                ChannelId = ChannelId,
+                Broadcaster = Broadcaster,
+                NumberOfClipsPerDay = NumberOfClipsPerDay,
+                MinViews = minViews
+            };
+        }
     }
 }

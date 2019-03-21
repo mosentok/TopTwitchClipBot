@@ -57,15 +57,25 @@ namespace TopTwitchClipBotCore.Helpers
             var orderedBroadcasters = container.Broadcasters.OrderBy(s => s.Broadcaster);
             foreach (var broadcaster in orderedBroadcasters)
             {
-                string streamerText;
+                var broadcasterText = broadcaster.Broadcaster;
+                string numberOfClipsPerDayText;
                 if (broadcaster.NumberOfClipsPerDay.HasValue)
                     if (broadcaster.NumberOfClipsPerDay.Value == 1)
-                        streamerText = $"{broadcaster.Broadcaster}, {broadcaster.NumberOfClipsPerDay.Value} clip per day";
+                        numberOfClipsPerDayText = "1 clip per day";
                     else
-                        streamerText = $"{broadcaster.Broadcaster}, {broadcaster.NumberOfClipsPerDay.Value} clips per day";
+                        numberOfClipsPerDayText = $"{broadcaster.NumberOfClipsPerDay.Value} clips per day";
                 else
-                    streamerText = $"{broadcaster.Broadcaster}, no limit";
-                streamersText += string.Format(streamersFormats[index], streamerText);
+                    numberOfClipsPerDayText = "no limit";
+                string minViewsText;
+                if (broadcaster.MinViews.HasValue)
+                    if (broadcaster.MinViews.Value == 1)
+                        minViewsText = "at least 1 view";
+                    else
+                        minViewsText = $"at least {broadcaster.MinViews.Value.ToString("N0")} views";
+                else
+                    minViewsText = "any view count";
+                var thisStreamersText = string.Join(", ", broadcasterText, numberOfClipsPerDayText, minViewsText);
+                streamersText += string.Format(streamersFormats[index], thisStreamersText);
                 index = (index + 1) % streamersFormats.Count;
             }
             return streamersText;
@@ -123,13 +133,25 @@ namespace TopTwitchClipBotCore.Helpers
             var timeBetweenClipsFormat = _ConfigWrapper["TimeBetweenClipsFormat"].Replace(newLineDelimiter, "\n");
             return string.Format(timeBetweenClipsFormat, output);
         }
-        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString)
+        public string GlobalMinViewsAsString(ChannelConfigContainer result)
+        {
+            string output;
+            if (!result.GlobalMinViews.HasValue)
+                output = "any view count";
+            else
+                output = result.GlobalMinViews.Value.ToString("N0");
+            var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
+            var globalMinViewsFormat = _ConfigWrapper["GlobalMinViewsFormat"].Replace(newLineDelimiter, "\n");
+            return string.Format(globalMinViewsFormat, output);
+        }
+        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString)
         {
             return new EmbedBuilder()
                 .WithAuthor($"Setup for Channel # {context.Channel.Name}", context.Guild.IconUrl)
                 .AddField("Post When?", postWhen, true)
                 .AddField("Time Between Clips?", timeSpanString, true)
                 .AddField("Clips at a Time", clipsAtATime, true)
+                .AddField("Min Views?", globalMinViewsString, true)
                 .AddField("Streamers", streamersText)
                 .AddField("Need Help?", _ConfigWrapper["HelpQuestionFieldText"])
                 .Build();

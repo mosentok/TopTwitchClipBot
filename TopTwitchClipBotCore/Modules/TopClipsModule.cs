@@ -56,14 +56,34 @@ namespace TopTwitchClipBotCore.Modules
             }
         }
         [Command(nameof(Of))]
-        public async Task Of(string broadcaster, int? numberOfClipsPerDay = null)
+        public async Task Of(string broadcaster, int? input = null, [Remainder] string option = null)
         {
-            var container = new BroadcasterConfigContainer
+            var match = await _FunctionWrapper.GetBroadcasterConfigAsync(Context.Channel.Id, broadcaster);
+            BroadcasterConfigContainer container;
+            switch (option.ToLower())
             {
-                ChannelId = Context.Channel.Id,
-                Broadcaster = broadcaster,
-                NumberOfClipsPerDay = numberOfClipsPerDay
-            };
+                case "clips":
+                case "clips per day":
+                    if (input.HasValue && input.Value > 0)
+                        container = match.FromClipsPerDay(input);
+                    else
+                        container = match.FromClipsPerDay(null);
+                    break;
+                case "views":
+                case "min views":
+                    if (input.HasValue && input.Value > 0)
+                        container = match.FromMinViews(input);
+                    else
+                        container = match.FromMinViews(null);
+                    break;
+                default:
+                    container = new BroadcasterConfigContainer
+                    {
+                        ChannelId = Context.Channel.Id,
+                        Broadcaster = broadcaster
+                    };
+                    break;
+            }
             var result = await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
             if (!string.IsNullOrEmpty(result.ErrorMessage))
                 await ReplyAsync(message: result.ErrorMessage);
@@ -110,13 +130,26 @@ namespace TopTwitchClipBotCore.Modules
             var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
             await ReplyAsync(result);
         }
+        [Command("Min Views")]
+        public async Task MinViews(int minViews)
+        {
+            var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
+            ChannelConfigContainer container;
+            if (minViews > 0)
+                container = match.FromGlobalMinViews(minViews);
+            else
+                container = match.FromGlobalMinViews(null);
+            var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+            await ReplyAsync(result);
+        }
         async Task ReplyAsync(ChannelConfigContainer result)
         {
             var streamersText = _TopClipsModuleHelper.BuildStreamersText(result);
             var postWhen = _TopClipsModuleHelper.DeterminePostWhen(result);
             var clipsAtATime = _TopClipsModuleHelper.DetermineClipsAtATime(result);
             var timeSpanString = _TopClipsModuleHelper.TimeSpanBetweenClipsAsString(result);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString);
+            var globalMinViewsString = _TopClipsModuleHelper.GlobalMinViewsAsString(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString);
             await ReplyAsync(message: string.Empty, embed: embed);
         }
     }

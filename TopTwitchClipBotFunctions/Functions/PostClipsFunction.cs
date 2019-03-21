@@ -31,6 +31,7 @@ namespace TopTwitchClipBotFunctions.Functions
                 var containers = await context.GetPendingChannelConfigsAsync(now.Hour);
                 var afterTimeBetweenClipsContainers = helper.AfterTimeBetweenClips(containers, now);
                 var readyToPostContainers = helper.ReadyToPostContainers(afterTimeBetweenClipsContainers, yesterday);
+                //TODO need to move "at a time" lower, because it's filtering out broadcasters that could have otherwise posted
                 var atATimeContainers = helper.AtATimeContainers(readyToPostContainers);
                 var pendingClipContainers = await helper.BuildClipContainers(topClipsEndpoint, clientId, accept, atATimeContainers);
                 var clipsWithMinViews = helper.ClipsWithMinViews(pendingClipContainers);
