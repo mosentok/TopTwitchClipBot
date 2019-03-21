@@ -9,18 +9,16 @@ namespace TopTwitchClipBotFunctions.Models
         public decimal ChannelId { get; set; }
         public string Broadcaster { get; set; }
         public int? NumberOfClipsPerDay { get; set; }
-        public int? GlobalMinViews { get; set; }
         public int? MinViews { get; set; }
         public List<BroadcasterHistoryContainer> ExistingHistories { get; set; }
         public List<Clip> Clips { get; set; }
         public PendingClipContainer() { }
-        public PendingClipContainer(PendingBroadcasterConfig pendingBroadcasterConfig, GetClipsResponse getClipsResponse, int? globalMinViews)
+        public PendingClipContainer(PendingBroadcasterConfig pendingBroadcasterConfig, GetClipsResponse getClipsResponse)
         {
             Id = pendingBroadcasterConfig.Id;
             ChannelId = pendingBroadcasterConfig.ChannelId;
             Broadcaster = pendingBroadcasterConfig.Broadcaster;
             NumberOfClipsPerDay = pendingBroadcasterConfig.NumberOfClipsPerDay;
-            GlobalMinViews = globalMinViews;
             MinViews = pendingBroadcasterConfig.MinViews;
             ExistingHistories = pendingBroadcasterConfig.ExistingHistories;
             Clips = getClipsResponse.Clips;

@@ -67,8 +67,8 @@ namespace TopTwitchClipBotTests.Functions
             _TwitchWrapper.VerifyAll();
             Assert.That(results.Count, Is.EqualTo(1));
             var result = results[0];
-            Assert.That(result.Clips, Is.EqualTo(clips));
-            Assert.That(result.Broadcaster, Is.EqualTo(broadcaster));
+            Assert.That(result.PendingChannelConfigContainer, Is.EqualTo(container));
+            Assert.That(result.PendingClipContainers[0].Clips, Contains.Item(clip));
         }
         [TestCase(1, 1, 1, 1)]
         [TestCase(1, null, 1, 1)]
@@ -82,10 +82,13 @@ namespace TopTwitchClipBotTests.Functions
             const int id = 123;
             var clip = new Clip { Views = clipViews };
             var clips = new List<Clip> { clip };
-            var pendingClipContainer = new PendingClipContainer { Id = id, GlobalMinViews = globalMinViews, MinViews = minViews, Clips = clips };
+            var pendingClipContainer = new PendingClipContainer { Clips = clips, MinViews = minViews };
             var pendingClipContainers = new List<PendingClipContainer> { pendingClipContainer };
-            var results = _Helper.ClipsWithMinViews(pendingClipContainers);
-            Assert.That(results.Count(s => s.Id == id), Is.EqualTo(expectedResult));
+            var pendingChannelConfigContainer = new PendingChannelConfigContainer { ChannelId = id, GlobalMinViews = globalMinViews };
+            var channelClipsContainer = new ChannelClipsContainer { PendingChannelConfigContainer = pendingChannelConfigContainer, PendingClipContainers = pendingClipContainers };
+            var channelClipsContainers = new List<ChannelClipsContainer> { channelClipsContainer };
+            var results = _Helper.ClipsWithMinViews(channelClipsContainers);
+            Assert.That(results.Count(s => s.PendingChannelConfigContainer.ChannelId == id), Is.EqualTo(expectedResult));
         }
         [TestCase("a title", 123, 456.78f, "2019-02-12T12:34:56", "https://twitch.tv/clip",
             "**a title**\r\n**123** views, **456.78s** long, created at **2/12/2019 12:34:56 PM UTC**\r\nhttps://twitch.tv/clip")]
