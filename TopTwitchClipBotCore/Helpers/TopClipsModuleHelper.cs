@@ -158,7 +158,7 @@ namespace TopTwitchClipBotCore.Helpers
                 .AddField("Post When?", postWhen, true)
                 .AddField("Time Between Clips?", timeSpanString, true)
                 .AddField("Clips at a Time", clipsAtATime, true)
-                .AddField("Min Views?", globalMinViewsString, true)
+                .AddField("Global Min Views?", globalMinViewsString, true)
                 .AddField("Streamers", streamersText)
                 .AddField("Need Help?", _ConfigWrapper["HelpQuestionFieldText"])
                 .Build();

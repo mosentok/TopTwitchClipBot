@@ -16,11 +16,13 @@ namespace TopTwitchClipBotCore.Modules
         readonly ITopClipsModuleHelper _TopClipsModuleHelper;
         readonly IFunctionWrapper _FunctionWrapper;
         readonly ILogger<TopClipsModule> _Log;
-        public TopClipsModule(ITopClipsModuleHelper topClipsModuleHelper, IFunctionWrapper functionWrapper, ILogger<TopClipsModule> log)
+        readonly IConfigurationWrapper _ConfigWrapper;
+        public TopClipsModule(ITopClipsModuleHelper topClipsModuleHelper, IFunctionWrapper functionWrapper, ILogger<TopClipsModule> log, IConfigurationWrapper configWrapper)
         {
             _TopClipsModuleHelper = topClipsModuleHelper;
             _FunctionWrapper = functionWrapper;
             _Log = log;
+            _ConfigWrapper = configWrapper;
         }
         [Command(nameof(Get))]
         [Alias(nameof(Get), "", "Config", "Setup")]
@@ -60,29 +62,38 @@ namespace TopTwitchClipBotCore.Modules
         {
             var match = await _FunctionWrapper.GetBroadcasterConfigAsync(Context.Channel.Id, broadcaster);
             BroadcasterConfigContainer container;
-            switch (option.ToLower())
+            var enableNumberOfClipsPerDay = _ConfigWrapper.GetValue<bool>("EnableNumberOfClipsPerDay");
+            if (!enableNumberOfClipsPerDay) //default to min views logic
+                container = ContainerFromMinViews();
+            else if (string.IsNullOrEmpty(option)) //no default to assume, just return
+                return;
+            else
+                switch (option.ToLower())
+                {
+                    case "clips":
+                    case "clips per day":
+                        if (input.HasValue && input.Value > 0)
+                            container = match.FromClipsPerDay(input);
+                        else
+                            container = match.FromClipsPerDay(null);
+                        break;
+                    case "views":
+                    case "min views":
+                        container = ContainerFromMinViews();
+                        break;
+                    default:
+                        container = new BroadcasterConfigContainer
+                        {
+                            ChannelId = Context.Channel.Id,
+                            Broadcaster = broadcaster
+                        };
+                        break;
+                }
+            BroadcasterConfigContainer ContainerFromMinViews()
             {
-                case "clips":
-                case "clips per day":
-                    if (input.HasValue && input.Value > 0)
-                        container = match.FromClipsPerDay(input);
-                    else
-                        container = match.FromClipsPerDay(null);
-                    break;
-                case "views":
-                case "min views":
-                    if (input.HasValue && input.Value > 0)
-                        container = match.FromMinViews(input);
-                    else
-                        container = match.FromMinViews(null);
-                    break;
-                default:
-                    container = new BroadcasterConfigContainer
-                    {
-                        ChannelId = Context.Channel.Id,
-                        Broadcaster = broadcaster
-                    };
-                    break;
+                if (input.HasValue && input.Value > 0)
+                    return match.FromMinViews(input);
+                return match.FromMinViews(null);
             }
             var result = await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
             if (!string.IsNullOrEmpty(result.ErrorMessage))

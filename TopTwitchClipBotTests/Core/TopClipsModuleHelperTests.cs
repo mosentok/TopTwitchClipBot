@@ -171,7 +171,7 @@ namespace TopTwitchClipBotTests.Core
             Assert.That(result.Fields[2].Name, Is.EqualTo("Clips at a Time"));
             Assert.That(result.Fields[2].Value, Is.EqualTo(clipsAtATime));
             Assert.That(result.Fields[2].Inline, Is.EqualTo(true));
-            Assert.That(result.Fields[3].Name, Is.EqualTo("Min Views?"));
+            Assert.That(result.Fields[3].Name, Is.EqualTo("Global Min Views?"));
             Assert.That(result.Fields[3].Value, Is.EqualTo(globalMinViewsString));
             Assert.That(result.Fields[3].Inline, Is.EqualTo(true));
             Assert.That(result.Fields[4].Name, Is.EqualTo("Streamers"));
