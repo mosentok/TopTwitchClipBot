@@ -71,23 +71,53 @@ namespace TopTwitchClipBotFunctions.Helpers
             }
             return pendingContainers;
         }
-        public List<PendingClipContainer> AtATimeContainers(List<ChannelClipsContainer> channelClipsContainers)
+        public List<ClipHistoryContainer> AtATimeContainers(List<UnseenChannelClipsContainer> unseenChannelClipsContainers)
         {
-            var clipContainers = new List<PendingClipContainer>();
-            foreach (var channelClipsContainer in channelClipsContainers)
+            var clipContainers = new List<ClipHistoryContainer>();
+            foreach (var unseenChannelClipsContainer in unseenChannelClipsContainers)
             {
                 var takenClipContainers = TakeClipsAtATime();
                 if (takenClipContainers.Any())
                     clipContainers.AddRange(takenClipContainers);
-                List<PendingClipContainer> TakeClipsAtATime()
+                List<ClipHistoryContainer> TakeClipsAtATime()
                 {
-                    var numberOfClipsAtATime = channelClipsContainer.PendingChannelConfigContainer.NumberOfClipsAtATime;
-                    if (numberOfClipsAtATime.HasValue)
-                        return channelClipsContainer.PendingClipContainers.Take(numberOfClipsAtATime.Value).ToList();
-                    return channelClipsContainer.PendingClipContainers;
+                    if (unseenChannelClipsContainer.NumberOfClipsAtATime.HasValue)
+                        return unseenChannelClipsContainer.UnseenClips.Take(unseenChannelClipsContainer.NumberOfClipsAtATime.Value).ToList();
+                    return unseenChannelClipsContainer.UnseenClips;
                 }
             }
             return clipContainers;
+        }
+        public List<UnseenChannelClipsContainer> BuildUnseenClipContainers(List<ChannelClipsContainer> channelClipsContainers)
+        {
+            var results = new List<UnseenChannelClipsContainer>();
+            foreach (var channelClipsContainer in channelClipsContainers)
+            {
+                var unseenClips = new List<ClipHistoryContainer>();
+                foreach (var clipContainer in channelClipsContainer.PendingClipContainers)
+                {
+                    var firstUnseenClip = clipContainer.Clips.FirstOrDefault(t => !clipContainer.ExistingHistories.Any(u => u.Slug == t.Slug));
+                    if (firstUnseenClip != null)
+                    {
+                        var historyContainer = new ClipHistoryContainer
+                        {
+                            ChannelId = clipContainer.ChannelId,
+                            BroadcasterConfigId = clipContainer.Id,
+                            Slug = firstUnseenClip.Slug,
+                            ClipUrl = firstUnseenClip.Url,
+                            Stamp = DateTime.Now,
+                            CreatedAt = firstUnseenClip.CreatedAt,
+                            Duration = firstUnseenClip.Duration,
+                            Title = firstUnseenClip.Title,
+                            Views = firstUnseenClip.Views
+                        };
+                        unseenClips.Add(historyContainer);
+                    }
+                }
+                if (unseenClips.Any())
+                    results.Add(new UnseenChannelClipsContainer(channelClipsContainer.PendingChannelConfigContainer.NumberOfClipsAtATime, unseenClips));
+            }
+            return results;
         }
         public async Task<List<ChannelClipsContainer>> BuildClipContainers(string topClipsEndpoint, string clientId, string accept, List<PendingChannelConfigContainer> channelContainers)
         {
@@ -145,32 +175,20 @@ namespace TopTwitchClipBotFunctions.Helpers
             }
             return results;
         }
-        public async Task<List<InsertedBroadcasterHistoryContainer>> InsertHistories(List<PendingClipContainer> pendingClipContainers)
+        public async Task<List<ClipHistoryContainer>> InsertHistories(List<ClipHistoryContainer> inserted)
         {
-            var historyContainers = new List<BroadcasterHistoryContainer>();
-            var inserted = new List<InsertedBroadcasterHistoryContainer>();
-            foreach (var clipContainer in pendingClipContainers)
+            var toInsert = inserted.Select(s => new BroadcasterHistoryContainer
             {
-                var firstUnseenClip = clipContainer.Clips.FirstOrDefault(t => !clipContainer.ExistingHistories.Any(u => u.Slug == t.Slug));
-                if (firstUnseenClip != null)
-                {
-                    var historyContainer = new BroadcasterHistoryContainer
-                    {
-                        ChannelId = clipContainer.ChannelId,
-                        BroadcasterConfigId = clipContainer.Id,
-                        Slug = firstUnseenClip.Slug,
-                        ClipUrl = firstUnseenClip.Url,
-                        Stamp = DateTime.Now
-                    };
-                    historyContainers.Add(historyContainer);
-                    var insertedContainer = new InsertedBroadcasterHistoryContainer(clipContainer.ChannelId, historyContainer, firstUnseenClip.Title, firstUnseenClip.Views, firstUnseenClip.Duration, firstUnseenClip.CreatedAt);
-                    inserted.Add(insertedContainer);
-                }
-            }
-            await _Context.InsertBroadcasterHistoriesAsync(historyContainers);
+                BroadcasterConfigId = s.BroadcasterConfigId,
+                ChannelId = s.ChannelId,
+                ClipUrl = s.ClipUrl,
+                Slug = s.Slug,
+                Stamp = s.Stamp
+            }).ToList();
+            await _Context.InsertBroadcasterHistoriesAsync(toInsert);
             return inserted;
         }
-        public async Task<List<ChannelContainer>> BuildChannelContainers(List<InsertedBroadcasterHistoryContainer> insertedHistories)
+        public async Task<List<ChannelContainer>> BuildChannelContainers(List<ClipHistoryContainer> insertedHistories)
         {
             var groupedHistories = insertedHistories.ToLookup(s => s.ChannelId);
             var channelContainers = new List<ChannelContainer>();
@@ -194,6 +212,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                     .AppendLine($"created at **{insertedContainer.CreatedAt} UTC**")
                     .Append(insertedContainer.ClipUrl)
                     .ToString();
+                //TODO try/catch
                 await channelContainer.Channel.SendMessageAsync(text: message);
             }
         }
