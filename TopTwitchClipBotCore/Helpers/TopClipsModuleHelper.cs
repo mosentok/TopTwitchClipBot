@@ -58,40 +58,41 @@ namespace TopTwitchClipBotCore.Helpers
             foreach (var broadcaster in orderedBroadcasters)
             {
                 var broadcasterText = broadcaster.Broadcaster;
-                string numberOfClipsPerDayText;
-                if (broadcaster.NumberOfClipsPerDay.HasValue)
-                    if (broadcaster.NumberOfClipsPerDay.Value == 1)
-                        numberOfClipsPerDayText = "1 clip per day";
-                    else
-                        numberOfClipsPerDayText = $"{broadcaster.NumberOfClipsPerDay.Value} clips per day";
-                else
-                    numberOfClipsPerDayText = "no limit";
-                string minViewsText;
-                if (broadcaster.MinViews.HasValue)
-                    if (broadcaster.MinViews.Value == 1)
-                        minViewsText = "at least 1 view";
-                    else
-                        minViewsText = $"at least {broadcaster.MinViews.Value.ToString("N0")} views";
-                else
-                    minViewsText = "any view count";
+                var numberOfClipsPerDayText = DetermineNumberOfClipsPerDayText();
+                var minViewsText = DetermineMinViewsText();
                 var thisStreamersText = string.Join(", ", broadcasterText, numberOfClipsPerDayText, minViewsText);
                 streamersText += string.Format(streamersFormats[index], thisStreamersText);
                 index = (index + 1) % streamersFormats.Count;
+                string DetermineNumberOfClipsPerDayText()
+                {
+                    if (!broadcaster.NumberOfClipsPerDay.HasValue)
+                        return "no limit";
+                    if (broadcaster.NumberOfClipsPerDay.Value == 1)
+                        return "1 clip per day";
+                    return $"{broadcaster.NumberOfClipsPerDay.Value} clips per day";
+                }
+                string DetermineMinViewsText()
+                {
+                    if (!broadcaster.MinViews.HasValue)
+                        return "any view count";
+                    if (broadcaster.MinViews.Value == 1)
+                        return "at least 1 view";
+                    return $"at least {broadcaster.MinViews.Value.ToString("N0")} views";
+                }
             }
             return streamersText;
         }
         public string DetermineClipsAtATime(ChannelConfigContainer container)
         {
-            string output;
-            if (container.NumberOfClipsAtATime.HasValue)
+            var output = DetermineClipsAtATimeText();
+            string DetermineClipsAtATimeText()
             {
+                if (!container.NumberOfClipsAtATime.HasValue)
+                    return "no limit";
                 if (container.NumberOfClipsAtATime.Value == 1)
-                    output = $"{container.NumberOfClipsAtATime.Value} clip at a time";
-                else
-                    output = $"{container.NumberOfClipsAtATime.Value} clips at a time";
+                    return $"{container.NumberOfClipsAtATime.Value} clip at a time";
+                return $"{container.NumberOfClipsAtATime.Value} clips at a time";
             }
-            else
-                output = "no limit";
             var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
             var clipsAtATimeFormat = _ConfigWrapper["ClipsAtATimeFormat"].Replace(newLineDelimiter, "\n");
             return string.Format(clipsAtATimeFormat, output);
@@ -114,20 +115,19 @@ namespace TopTwitchClipBotCore.Helpers
         }
         public string TimeSpanBetweenClipsAsString(ChannelConfigContainer result)
         {
-            string output;
-            if (!result.TimeSpanBetweenClipsAsTicks.HasValue)
-                output = "at least a few minutes";
-            else
+            var output = DetermineTimeBetweenClipsText();
+            string DetermineTimeBetweenClipsText()
             {
+                if (!result.TimeSpanBetweenClipsAsTicks.HasValue)
+                    return "at least a few minutes";
                 var timeSpan = TimeSpan.FromTicks(result.TimeSpanBetweenClipsAsTicks.Value);
                 if (timeSpan.TotalMinutes == 1)
-                    output = $"at least 1 minute";
-                else if (timeSpan.TotalMinutes < 60)
-                    output = $"at least {(int)timeSpan.TotalMinutes} minutes";
-                else if (timeSpan.TotalHours == 1)
-                    output = "at least 1 hour";
-                else
-                    output = $"at least {(int)timeSpan.TotalHours} hours";
+                    return $"at least 1 minute";
+                if (timeSpan.TotalMinutes < 60)
+                    return $"at least {(int)timeSpan.TotalMinutes} minutes";
+                if (timeSpan.TotalHours == 1)
+                    return "at least 1 hour";
+                return $"at least {(int)timeSpan.TotalHours} hours";
             }
             var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
             var timeBetweenClipsFormat = _ConfigWrapper["TimeBetweenClipsFormat"].Replace(newLineDelimiter, "\n");
