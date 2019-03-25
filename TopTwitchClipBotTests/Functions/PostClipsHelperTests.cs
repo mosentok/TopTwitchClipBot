@@ -29,11 +29,11 @@ namespace TopTwitchClipBotTests.Functions
             _DiscordWrapper = new Mock<IDiscordWrapper>();
             _Helper = new PostClipsHelper(_Log.Object, _Context.Object, _TwitchWrapper.Object, _DiscordWrapper.Object);
         }
-        [TestCase(null, "2019-02-13", "2019-02-12", true)]
-        [TestCase(1, "2019-02-13", "2019-02-12", false)]
-        [TestCase(1, "2019-02-13", "2019-02-13", false)]
-        [TestCase(1, "2019-02-13", "2019-02-11", true)]
-        public void IsReadyToPost(int? numberOfClipsPerDay, string nowString, string stampString, bool expectedResult)
+        [TestCase(null, "2019-02-13", "2019-02-12", true, true)]
+        [TestCase(1, "2019-02-13", "2019-02-12", true, false)]
+        [TestCase(1, "2019-02-13", "2019-02-13", true, false)]
+        [TestCase(1, "2019-02-13", "2019-02-11", true, true)]
+        public void IsReadyToPost(int? numberOfClipsPerDay, string nowString, string stampString, bool enableNumberOfClipsPerDay, bool expectedResult)
         {
             var stamp = DateTime.Parse(stampString);
             var existingHistory = new BroadcasterHistoryContainer { Stamp = stamp };
@@ -43,7 +43,7 @@ namespace TopTwitchClipBotTests.Functions
             var broadcasters = new List<PendingBroadcasterConfig> { pendingBroadcasterConfig };
             var pendingChannelConfigContainer = new PendingChannelConfigContainer { Broadcasters = broadcasters };
             var channelContainers = new List<PendingChannelConfigContainer> { pendingChannelConfigContainer };
-            var result = _Helper.ReadyToPostContainers(channelContainers, yesterday);
+            var result = _Helper.ReadyToPostContainers(channelContainers, yesterday, enableNumberOfClipsPerDay);
             var anyReadyBroadcasters = result.SelectMany(s => s.Broadcasters).Any();
             Assert.That(anyReadyBroadcasters, Is.EqualTo(expectedResult));
         }

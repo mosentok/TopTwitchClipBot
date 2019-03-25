@@ -18,6 +18,7 @@ namespace TopTwitchClipBotFunctions.Functions
             var accept = Environment.GetEnvironmentVariable("TwitchAcceptHeaderValue");
             var botToken = Environment.GetEnvironmentVariable("BotToken");
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
+            var enableNumberOfClipsPerDay = bool.Parse(Environment.GetEnvironmentVariable("EnableNumberOfClipsPerDay"));
             var now = DateTime.Now;
             var yesterday = now.AddDays(-1);
             var logWrapper = new LoggerWrapper(log);
@@ -30,7 +31,7 @@ namespace TopTwitchClipBotFunctions.Functions
                 await discordWrapper.LogInAsync();
                 var containers = await context.GetPendingChannelConfigsAsync(now.Hour);
                 var afterTimeBetweenClipsContainers = helper.AfterTimeBetweenClips(containers, now);
-                var readyToPostContainers = helper.ReadyToPostContainers(afterTimeBetweenClipsContainers, yesterday);
+                var readyToPostContainers = helper.ReadyToPostContainers(afterTimeBetweenClipsContainers, yesterday, enableNumberOfClipsPerDay);
                 var pendingClipContainers = await helper.BuildClipContainers(topClipsEndpoint, clientId, accept, readyToPostContainers);
                 var clipsWithMinViews = helper.ClipsWithMinViews(pendingClipContainers);
                 var atATimeContainers = helper.AtATimeContainers(clipsWithMinViews);

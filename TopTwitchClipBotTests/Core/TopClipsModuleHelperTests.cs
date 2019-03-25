@@ -84,6 +84,7 @@ namespace TopTwitchClipBotTests.Core
         [Test]
         public void BuildStreamersText_SomeStreamers()
         {
+            _ConfigWrapper.Setup(s => s.GetValue<bool>("EnableNumberOfClipsPerDay")).Returns(true);
             var broadcaster1 = new BroadcasterConfigContainer { Broadcaster = "broadcaster123" };
             var broadcaster2 = new BroadcasterConfigContainer { Broadcaster = "anotherstreamer", NumberOfClipsPerDay = 4 };
             var broadcaster3 = new BroadcasterConfigContainer { Broadcaster = "omegalulmydude" };

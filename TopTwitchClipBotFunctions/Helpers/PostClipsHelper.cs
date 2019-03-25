@@ -44,7 +44,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             var timeSinceLastPost = now - latestHistoryStamp;
             return timeSinceLastPost.Ticks >= channelContainer.TimeSpanBetweenClipsAsTicks.Value;
         }
-        public List<PendingChannelConfigContainer> ReadyToPostContainers(List<PendingChannelConfigContainer> channelContainers, DateTime yesterday)
+        public List<PendingChannelConfigContainer> ReadyToPostContainers(List<PendingChannelConfigContainer> channelContainers, DateTime yesterday, bool enableNumberOfClipsPerDay)
         {
             var pendingContainers = new List<PendingChannelConfigContainer>();
             var clipsCache = new Dictionary<string, GetClipsResponse>();
@@ -58,6 +58,8 @@ namespace TopTwitchClipBotFunctions.Helpers
                         broadcasters.Add(broadcasterContainer);
                     bool IsReadyToPost()
                     {
+                        if (!enableNumberOfClipsPerDay)
+                            return true;
                         if (!broadcasterContainer.NumberOfClipsPerDay.HasValue) //no cap
                             return true;
                         var numberOfClipsSeenInTheLastDay = broadcasterContainer.ExistingHistories.Count(s => s.Stamp >= yesterday);

@@ -50,6 +50,7 @@ namespace TopTwitchClipBotCore.Helpers
         {
             if (!container.Broadcasters.Any())
                 return _ConfigWrapper["NoStreamersText"];
+            var enableNumberOfClipsPerDay = _ConfigWrapper.GetValue<bool>("EnableNumberOfClipsPerDay");
             var streamersText = _ConfigWrapper["StreamersFieldBeginText"];
             var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
             var streamersFormats = _ConfigWrapper.Get<List<string>>("StreamersFormats").Select(s => s.Replace(newLineDelimiter, "\n")).ToList();
@@ -60,7 +61,7 @@ namespace TopTwitchClipBotCore.Helpers
                 var broadcasterText = broadcaster.Broadcaster;
                 var numberOfClipsPerDayText = DetermineNumberOfClipsPerDayText();
                 var minViewsText = DetermineMinViewsText();
-                var thisStreamersText = string.Join(", ", broadcasterText, numberOfClipsPerDayText, minViewsText);
+                var thisStreamersText = DetermineThisStreamersText();
                 streamersText += string.Format(streamersFormats[index], thisStreamersText);
                 index = (index + 1) % streamersFormats.Count;
                 string DetermineNumberOfClipsPerDayText()
@@ -78,6 +79,12 @@ namespace TopTwitchClipBotCore.Helpers
                     if (broadcaster.MinViews.Value == 1)
                         return "at least 1 view";
                     return $"at least {broadcaster.MinViews.Value.ToString("N0")} views";
+                }
+                string DetermineThisStreamersText()
+                {
+                    if (enableNumberOfClipsPerDay)
+                        return string.Join(", ", broadcasterText, numberOfClipsPerDayText, minViewsText);
+                    return string.Join(", ", broadcasterText, minViewsText);
                 }
             }
             return streamersText;
