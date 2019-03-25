@@ -75,7 +75,11 @@ namespace TopTwitchClipBotCore.Helpers
                 string DetermineMinViewsText()
                 {
                     if (!broadcaster.MinViews.HasValue)
+                    {
+                        if (container.GlobalMinViews.HasValue)
+                            return $"at least {container.GlobalMinViews.Value.ToString("N0")} views (global)";
                         return "any view count";
+                    }
                     if (broadcaster.MinViews.Value == 1)
                         return "at least 1 view";
                     return $"at least {broadcaster.MinViews.Value.ToString("N0")} views";
@@ -146,7 +150,7 @@ namespace TopTwitchClipBotCore.Helpers
             if (!result.GlobalMinViews.HasValue)
                 output = "any view count";
             else
-                output = result.GlobalMinViews.Value.ToString("N0");
+                output = $"at least {result.GlobalMinViews.Value.ToString("N0")} views";
             var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
             var globalMinViewsFormat = _ConfigWrapper["GlobalMinViewsFormat"].Replace(newLineDelimiter, "\n");
             return string.Format(globalMinViewsFormat, output);
