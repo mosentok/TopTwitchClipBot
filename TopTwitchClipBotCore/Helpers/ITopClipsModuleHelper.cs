@@ -16,6 +16,7 @@ namespace TopTwitchClipBotCore.Helpers
         string DetermineClipsAtATime(ChannelConfigContainer container);
         long? TicksFromIntervalTime(int interval, Time time);
         string TimeSpanBetweenClipsAsString(ChannelConfigContainer result);
-        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString);
+        string GlobalMinViewsAsString(ChannelConfigContainer result);
+        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString);
     }
 }

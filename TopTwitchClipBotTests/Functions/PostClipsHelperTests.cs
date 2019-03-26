@@ -29,11 +29,11 @@ namespace TopTwitchClipBotTests.Functions
             _DiscordWrapper = new Mock<IDiscordWrapper>();
             _Helper = new PostClipsHelper(_Log.Object, _Context.Object, _TwitchWrapper.Object, _DiscordWrapper.Object);
         }
-        [TestCase(null, "2019-02-13", "2019-02-12", true)]
-        [TestCase(1, "2019-02-13", "2019-02-12", false)]
-        [TestCase(1, "2019-02-13", "2019-02-13", false)]
-        [TestCase(1, "2019-02-13", "2019-02-11", true)]
-        public void IsReadyToPost(int? numberOfClipsPerDay, string nowString, string stampString, bool expectedResult)
+        [TestCase(null, "2019-02-13", "2019-02-12", true, true)]
+        [TestCase(1, "2019-02-13", "2019-02-12", true, false)]
+        [TestCase(1, "2019-02-13", "2019-02-13", true, false)]
+        [TestCase(1, "2019-02-13", "2019-02-11", true, true)]
+        public void IsReadyToPost(int? numberOfClipsPerDay, string nowString, string stampString, bool enableNumberOfClipsPerDay, bool expectedResult)
         {
             var stamp = DateTime.Parse(stampString);
             var existingHistory = new BroadcasterHistoryContainer { Stamp = stamp };
@@ -43,7 +43,7 @@ namespace TopTwitchClipBotTests.Functions
             var broadcasters = new List<PendingBroadcasterConfig> { pendingBroadcasterConfig };
             var pendingChannelConfigContainer = new PendingChannelConfigContainer { Broadcasters = broadcasters };
             var channelContainers = new List<PendingChannelConfigContainer> { pendingChannelConfigContainer };
-            var result = _Helper.ReadyToPostContainers(channelContainers, yesterday);
+            var result = _Helper.ReadyToPostContainers(channelContainers, yesterday, enableNumberOfClipsPerDay);
             var anyReadyBroadcasters = result.SelectMany(s => s.Broadcasters).Any();
             Assert.That(anyReadyBroadcasters, Is.EqualTo(expectedResult));
         }
@@ -67,8 +67,28 @@ namespace TopTwitchClipBotTests.Functions
             _TwitchWrapper.VerifyAll();
             Assert.That(results.Count, Is.EqualTo(1));
             var result = results[0];
-            Assert.That(result.Clips, Is.EqualTo(clips));
-            Assert.That(result.Broadcaster, Is.EqualTo(broadcaster));
+            Assert.That(result.PendingChannelConfigContainer, Is.EqualTo(container));
+            Assert.That(result.PendingClipContainers[0].Clips, Contains.Item(clip));
+        }
+        [TestCase(1, 1, 1, 1)]
+        [TestCase(1, null, 1, 1)]
+        [TestCase(1, 1, null, 1)]
+        [TestCase(1, 2, 2, 0)]
+        [TestCase(1, null, 2, 0)]
+        [TestCase(1, 2, null, 0)]
+        [TestCase(1, null, null, 1)]
+        public void ClipsWithMinViews(int clipViews, int? globalMinViews, int? minViews, int expectedResult)
+        {
+            const int id = 123;
+            var clip = new Clip { Views = clipViews };
+            var clips = new List<Clip> { clip };
+            var pendingClipContainer = new PendingClipContainer { Clips = clips, MinViews = minViews };
+            var pendingClipContainers = new List<PendingClipContainer> { pendingClipContainer };
+            var pendingChannelConfigContainer = new PendingChannelConfigContainer { ChannelId = id, GlobalMinViews = globalMinViews };
+            var channelClipsContainer = new ChannelClipsContainer { PendingChannelConfigContainer = pendingChannelConfigContainer, PendingClipContainers = pendingClipContainers };
+            var channelClipsContainers = new List<ChannelClipsContainer> { channelClipsContainer };
+            var results = _Helper.ClipsWithMinViews(channelClipsContainers);
+            Assert.That(results.Count(s => s.PendingChannelConfigContainer.ChannelId == id), Is.EqualTo(expectedResult));
         }
         [TestCase("a title", 123, 456.78f, "2019-02-12T12:34:56", "https://twitch.tv/clip",
             "**a title**\r\n**123** views, **456.78s** long, created at **2/12/2019 12:34:56 PM UTC**\r\nhttps://twitch.tv/clip")]
@@ -76,10 +96,10 @@ namespace TopTwitchClipBotTests.Functions
         {
             var createdAt = DateTime.Parse(createdAtString);
             var channel = new Mock<IMessageChannel>();
-            var insertedContainer = new InsertedBroadcasterHistoryContainer { ClipUrl = clipUrl, Title = title, Views = views, Duration = duration, CreatedAt = createdAt };
+            var insertedContainer = new ClipHistoryContainer { ClipUrl = clipUrl, Title = title, Views = views, Duration = duration, CreatedAt = createdAt };
             var userMessage = new Mock<IUserMessage>();
             channel.Setup(s => s.SendMessageAsync(expectedMessage, It.IsAny<bool>(), It.IsAny<Embed>(), It.IsAny<RequestOptions>())).ReturnsAsync(userMessage.Object);
-            var inserted = new List<InsertedBroadcasterHistoryContainer> { insertedContainer };
+            var inserted = new List<ClipHistoryContainer> { insertedContainer };
             var channelContainer = new ChannelContainer(inserted, channel.Object);
             var task = _Helper.SendMessagesAsync(channelContainer);
             await task;

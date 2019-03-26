@@ -44,7 +44,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             var timeSinceLastPost = now - latestHistoryStamp;
             return timeSinceLastPost.Ticks >= channelContainer.TimeSpanBetweenClipsAsTicks.Value;
         }
-        public List<PendingChannelConfigContainer> ReadyToPostContainers(List<PendingChannelConfigContainer> channelContainers, DateTime yesterday)
+        public List<PendingChannelConfigContainer> ReadyToPostContainers(List<PendingChannelConfigContainer> channelContainers, DateTime yesterday, bool enableNumberOfClipsPerDay)
         {
             var pendingContainers = new List<PendingChannelConfigContainer>();
             var clipsCache = new Dictionary<string, GetClipsResponse>();
@@ -53,45 +53,79 @@ namespace TopTwitchClipBotFunctions.Helpers
                 var broadcasters = new List<PendingBroadcasterConfig>();
                 foreach (var broadcasterContainer in channelContainer.Broadcasters)
                 {
-                    var isReadyToPost = IsReadyToPost(broadcasterContainer, yesterday);
+                    var isReadyToPost = IsReadyToPost();
                     if (isReadyToPost)
                         broadcasters.Add(broadcasterContainer);
+                    bool IsReadyToPost()
+                    {
+                        if (!enableNumberOfClipsPerDay)
+                            return true;
+                        if (!broadcasterContainer.NumberOfClipsPerDay.HasValue) //no cap
+                            return true;
+                        var numberOfClipsSeenInTheLastDay = broadcasterContainer.ExistingHistories.Count(s => s.Stamp >= yesterday);
+                        return numberOfClipsSeenInTheLastDay < broadcasterContainer.NumberOfClipsPerDay.Value; //is below cap
+                    }
                 }
                 if (broadcasters.Any())
                     pendingContainers.Add(new PendingChannelConfigContainer(channelContainer, broadcasters));
             }
             return pendingContainers;
         }
-        static bool IsReadyToPost(PendingBroadcasterConfig pendingBroadcaster, DateTime yesterday)
+        public List<ClipHistoryContainer> AtATimeContainers(List<UnseenChannelClipsContainer> unseenChannelClipsContainers)
         {
-            if (!pendingBroadcaster.NumberOfClipsPerDay.HasValue) //no cap
-                return true;
-            var numberOfClipsSeenInTheLastDay = pendingBroadcaster.ExistingHistories.Count(s => s.Stamp >= yesterday);
-            return numberOfClipsSeenInTheLastDay < pendingBroadcaster.NumberOfClipsPerDay.Value; //is below cap
+            var clipContainers = new List<ClipHistoryContainer>();
+            foreach (var unseenChannelClipsContainer in unseenChannelClipsContainers)
+            {
+                var takenClipContainers = TakeClipsAtATime();
+                if (takenClipContainers.Any())
+                    clipContainers.AddRange(takenClipContainers);
+                List<ClipHistoryContainer> TakeClipsAtATime()
+                {
+                    if (unseenChannelClipsContainer.NumberOfClipsAtATime.HasValue)
+                        return unseenChannelClipsContainer.UnseenClips.Take(unseenChannelClipsContainer.NumberOfClipsAtATime.Value).ToList();
+                    return unseenChannelClipsContainer.UnseenClips;
+                }
+            }
+            return clipContainers;
         }
-        public List<PendingChannelConfigContainer> AtATimeContainers(List<PendingChannelConfigContainer> channelContainers)
+        public List<UnseenChannelClipsContainer> BuildUnseenClipContainers(List<ChannelClipsContainer> channelClipsContainers)
         {
-            var pendingContainers = new List<PendingChannelConfigContainer>();
+            var results = new List<UnseenChannelClipsContainer>();
+            foreach (var channelClipsContainer in channelClipsContainers)
+            {
+                var unseenClips = new List<ClipHistoryContainer>();
+                foreach (var clipContainer in channelClipsContainer.PendingClipContainers)
+                {
+                    var firstUnseenClip = clipContainer.Clips.FirstOrDefault(t => !clipContainer.ExistingHistories.Any(u => u.Slug == t.Slug));
+                    if (firstUnseenClip != null)
+                    {
+                        var historyContainer = new ClipHistoryContainer
+                        {
+                            ChannelId = clipContainer.ChannelId,
+                            BroadcasterConfigId = clipContainer.Id,
+                            Slug = firstUnseenClip.Slug,
+                            ClipUrl = firstUnseenClip.Url,
+                            Stamp = DateTime.Now,
+                            CreatedAt = firstUnseenClip.CreatedAt,
+                            Duration = firstUnseenClip.Duration,
+                            Title = firstUnseenClip.Title,
+                            Views = firstUnseenClip.Views
+                        };
+                        unseenClips.Add(historyContainer);
+                    }
+                }
+                if (unseenClips.Any())
+                    results.Add(new UnseenChannelClipsContainer(channelClipsContainer.PendingChannelConfigContainer.NumberOfClipsAtATime, unseenClips));
+            }
+            return results;
+        }
+        public async Task<List<ChannelClipsContainer>> BuildClipContainers(string topClipsEndpoint, string clientId, string accept, List<PendingChannelConfigContainer> channelContainers)
+        {
+            var channelClipsContainers = new List<ChannelClipsContainer>();
             var clipsCache = new Dictionary<string, GetClipsResponse>();
             foreach (var channelContainer in channelContainers)
             {
-                var broadcasters = GetBroadcastersToPost(channelContainer);
-                if (broadcasters.Any())
-                    pendingContainers.Add(new PendingChannelConfigContainer(channelContainer, broadcasters));
-            }
-            return pendingContainers;
-        }
-        static List<PendingBroadcasterConfig> GetBroadcastersToPost(PendingChannelConfigContainer channelContainer)
-        {
-            if (channelContainer.NumberOfClipsAtATime.HasValue)
-                return channelContainer.Broadcasters.Take(channelContainer.NumberOfClipsAtATime.Value).ToList();
-            return channelContainer.Broadcasters;
-        }
-        public async Task<List<PendingClipContainer>> BuildClipContainers(string topClipsEndpoint, string clientId, string accept, List<PendingChannelConfigContainer> channelContainers)
-        {
-            var pendingClipContainers = new List<PendingClipContainer>();
-            var clipsCache = new Dictionary<string, GetClipsResponse>();
-            foreach (var channelContainer in channelContainers)
+                var pendingClipContainers = new List<PendingClipContainer>();
                 foreach (var broadcasterContainer in channelContainer.Broadcasters)
                     if (clipsCache.ContainsKey(broadcasterContainer.Broadcaster))
                     {
@@ -106,34 +140,55 @@ namespace TopTwitchClipBotFunctions.Helpers
                         pendingClipContainers.Add(pendingClipContainer);
                         clipsCache.Add(broadcasterContainer.Broadcaster, response);
                     }
-            return pendingClipContainers;
-        }
-        public async Task<List<InsertedBroadcasterHistoryContainer>> InsertHistories(List<PendingClipContainer> pendingClipContainers)
-        {
-            var historyContainers = new List<BroadcasterHistoryContainer>();
-            var inserted = new List<InsertedBroadcasterHistoryContainer>();
-            foreach (var clipContainer in pendingClipContainers)
-            {
-                var firstUnseenClip = clipContainer.Clips.FirstOrDefault(t => !clipContainer.ExistingHistories.Any(u => u.Slug == t.Slug));
-                if (firstUnseenClip != null)
-                {
-                    var historyContainer = new BroadcasterHistoryContainer
-                    {
-                        ChannelId = clipContainer.ChannelId,
-                        BroadcasterConfigId = clipContainer.Id,
-                        Slug = firstUnseenClip.Slug,
-                        ClipUrl = firstUnseenClip.Url,
-                        Stamp = DateTime.Now
-                    };
-                    historyContainers.Add(historyContainer);
-                    var insertedContainer = new InsertedBroadcasterHistoryContainer(clipContainer.ChannelId, historyContainer, firstUnseenClip.Title, firstUnseenClip.Views, firstUnseenClip.Duration, firstUnseenClip.CreatedAt);
-                    inserted.Add(insertedContainer);
-                }
+                var channelClipsContainer = new ChannelClipsContainer(channelContainer, pendingClipContainers);
+                channelClipsContainers.Add(channelClipsContainer);
             }
-            await _Context.InsertBroadcasterHistoriesAsync(historyContainers);
+            return channelClipsContainers;
+        }
+        public List<ChannelClipsContainer> ClipsWithMinViews(List<ChannelClipsContainer> channelClipsContainers)
+        {
+            var results = new List<ChannelClipsContainer>();
+            foreach (var channelClipsContainer in channelClipsContainers)
+            {
+                var haveMinViews = new List<PendingClipContainer>();
+                var globalMinViews = channelClipsContainer.PendingChannelConfigContainer.GlobalMinViews;
+                foreach (var pendingClipContainer in channelClipsContainer.PendingClipContainers)
+                {
+                    if (pendingClipContainer.MinViews.HasValue)
+                        TryAddResult(pendingClipContainer.MinViews.Value);
+                    else if (globalMinViews.HasValue)
+                        TryAddResult(globalMinViews.Value);
+                    else
+                        haveMinViews.Add(pendingClipContainer);
+                    void TryAddResult(int minViews)
+                    {
+                        var clips = pendingClipContainer.Clips.Where(s => s.Views >= minViews).ToList();
+                        if (clips.Any())
+                        {
+                            var hasMinViews = pendingClipContainer.FromClips(clips);
+                            haveMinViews.Add(hasMinViews);
+                        }
+                    }
+                }
+                if (haveMinViews.Any())
+                    results.Add(new ChannelClipsContainer(channelClipsContainer.PendingChannelConfigContainer, haveMinViews));
+            }
+            return results;
+        }
+        public async Task<List<ClipHistoryContainer>> InsertHistories(List<ClipHistoryContainer> inserted)
+        {
+            var toInsert = inserted.Select(s => new BroadcasterHistoryContainer
+            {
+                BroadcasterConfigId = s.BroadcasterConfigId,
+                ChannelId = s.ChannelId,
+                ClipUrl = s.ClipUrl,
+                Slug = s.Slug,
+                Stamp = s.Stamp
+            }).ToList();
+            await _Context.InsertBroadcasterHistoriesAsync(toInsert);
             return inserted;
         }
-        public async Task<List<ChannelContainer>> BuildChannelContainers(List<InsertedBroadcasterHistoryContainer> insertedHistories)
+        public async Task<List<ChannelContainer>> BuildChannelContainers(List<ClipHistoryContainer> insertedHistories)
         {
             var groupedHistories = insertedHistories.ToLookup(s => s.ChannelId);
             var channelContainers = new List<ChannelContainer>();
@@ -149,6 +204,7 @@ namespace TopTwitchClipBotFunctions.Helpers
         {
             foreach (var insertedContainer in channelContainer.Inserted)
             {
+                //TODO add broadcaster to output
                 var message = new StringBuilder()
                     .AppendLine($"**{insertedContainer.Title}**")
                     .Append($"**{insertedContainer.Views}** views, ")
@@ -156,6 +212,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                     .AppendLine($"created at **{insertedContainer.CreatedAt} UTC**")
                     .Append(insertedContainer.ClipUrl)
                     .ToString();
+                //TODO try/catch
                 await channelContainer.Channel.SendMessageAsync(text: message);
             }
         }

@@ -43,6 +43,7 @@ namespace TopTwitchClipBotModel
                 channelConfig.MaxPostingHour = container.MaxPostingHour;
                 channelConfig.NumberOfClipsAtATime = container.NumberOfClipsAtATime;
                 channelConfig.TimeSpanBetweenClipsAsTicks = container.TimeSpanBetweenClipsAsTicks;
+                channelConfig.GlobalMinViews = container.GlobalMinViews;
             }
             else
             {
@@ -52,12 +53,20 @@ namespace TopTwitchClipBotModel
                     MinPostingHour = container.MinPostingHour,
                     MaxPostingHour = container.MaxPostingHour,
                     NumberOfClipsAtATime = container.NumberOfClipsAtATime,
-                    TimeSpanBetweenClipsAsTicks = container.TimeSpanBetweenClipsAsTicks
-            };
+                    TimeSpanBetweenClipsAsTicks = container.TimeSpanBetweenClipsAsTicks,
+                    GlobalMinViews = container.GlobalMinViews
+                };
                 ChannelConfigs.Add(channelConfig);
             }
             await SaveChangesAsync();
             return new ChannelConfigContainer(channelConfig);
+        }
+        public async Task<BroadcasterConfigContainer> GetBroadcasterConfigAsync(decimal channelId, string broadcaster)
+        {
+            var match = await BroadcasterConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId && s.Broadcaster == broadcaster);
+            if (match != null)
+                return new BroadcasterConfigContainer(match);
+            return new BroadcasterConfigContainer { ChannelId = channelId, Broadcaster = broadcaster };
         }
         public async Task<ChannelConfigContainer> SetBroadcasterConfigAsync(decimal channelId, string displayName, BroadcasterConfigContainer container)
         {
@@ -68,6 +77,7 @@ namespace TopTwitchClipBotModel
                 broadcasterConfig = match;
                 broadcasterConfig.Broadcaster = displayName;
                 broadcasterConfig.NumberOfClipsPerDay = container.NumberOfClipsPerDay;
+                broadcasterConfig.MinViews = container.MinViews;
             }
             else
             {
@@ -75,7 +85,8 @@ namespace TopTwitchClipBotModel
                 {
                     ChannelId = container.ChannelId,
                     Broadcaster = displayName,
-                    NumberOfClipsPerDay = container.NumberOfClipsPerDay
+                    NumberOfClipsPerDay = container.NumberOfClipsPerDay,
+                    MinViews = container.MinViews
                 };
                 ChannelConfig channelConfig;
                 var parent = await ChannelConfigs.SingleOrDefaultAsync(s => s.ChannelId == channelId);
@@ -120,12 +131,14 @@ namespace TopTwitchClipBotModel
                               MaxPostingHour = s.MaxPostingHour,
                               NumberOfClipsAtATime = s.NumberOfClipsAtATime,
                               TimeSpanBetweenClipsAsTicks = s.TimeSpanBetweenClipsAsTicks,
+                              GlobalMinViews = s.GlobalMinViews,
                               Broadcasters = s.BroadcasterConfigs.Select(t => new PendingBroadcasterConfig
                               {
                                   Id = t.Id,
                                   Broadcaster = t.Broadcaster,
                                   ChannelId = t.ChannelId,
                                   NumberOfClipsPerDay = t.NumberOfClipsPerDay,
+                                  MinViews = t.MinViews,
                                   ExistingHistories = t.BroadcasterHistories.Select(u => new BroadcasterHistoryContainer(t.ChannelId, u)).ToList()
                               }).ToList()
                           }).ToListAsync();
