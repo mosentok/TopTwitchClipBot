@@ -9,6 +9,7 @@ namespace TopTwitchClipBotFunctions.Models
         public decimal ChannelId { get; set; }
         public string Broadcaster { get; set; }
         public int? NumberOfClipsPerDay { get; set; }
+        public int? MinViews { get; set; }
         public List<BroadcasterHistoryContainer> ExistingHistories { get; set; }
         public List<Clip> Clips { get; set; }
         public PendingClipContainer() { }
@@ -18,8 +19,22 @@ namespace TopTwitchClipBotFunctions.Models
             ChannelId = pendingBroadcasterConfig.ChannelId;
             Broadcaster = pendingBroadcasterConfig.Broadcaster;
             NumberOfClipsPerDay = pendingBroadcasterConfig.NumberOfClipsPerDay;
+            MinViews = pendingBroadcasterConfig.MinViews;
             ExistingHistories = pendingBroadcasterConfig.ExistingHistories;
             Clips = getClipsResponse.Clips;
+        }
+        public PendingClipContainer FromClips(List<Clip> clips)
+        {
+            return new PendingClipContainer
+            {
+                Id = Id,
+                ChannelId = ChannelId,
+                Broadcaster = Broadcaster,
+                NumberOfClipsPerDay = NumberOfClipsPerDay,
+                MinViews = MinViews,
+                ExistingHistories = ExistingHistories,
+                Clips = clips
+            };
         }
     }
 }

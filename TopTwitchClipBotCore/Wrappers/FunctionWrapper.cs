@@ -17,6 +17,7 @@ namespace TopTwitchClipBotCore.Wrappers
         readonly string _FunctionsKeyHeaderName;
         readonly string _GetChannelConfigFunctionKey;
         readonly string _PostChannelConfigFunctionKey;
+        readonly string _GetBroadcasterConfigFunctionKey;
         readonly string _PostBroadcasterConfigFunctionKey;
         readonly string _DeleteBroadcasterConfigFunctionKey;
         public FunctionWrapper(IConfigurationWrapper configWrapper)
@@ -26,6 +27,7 @@ namespace TopTwitchClipBotCore.Wrappers
             _FunctionsKeyHeaderName = configWrapper["FunctionsKeyHeaderName"];
             _GetChannelConfigFunctionKey = configWrapper["GetChannelConfigFunctionKey"];
             _PostChannelConfigFunctionKey = configWrapper["PostChannelConfigFunctionKey"];
+            _GetBroadcasterConfigFunctionKey = configWrapper["GetBroadcasterConfigFunctionKey"];
             _PostBroadcasterConfigFunctionKey = configWrapper["PostBroadcasterConfigFunctionKey"];
             _DeleteBroadcasterConfigFunctionKey = configWrapper["DeleteBroadcasterConfigFunctionKey"];
         }
@@ -47,12 +49,21 @@ namespace TopTwitchClipBotCore.Wrappers
             var content = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<ChannelConfigContainer>(content);
         }
+        public async Task<BroadcasterConfigContainer> GetBroadcasterConfigAsync(decimal channelId, string broadcaster)
+        {
+            var requestUri = string.Format(_BroadcasterConfigEndpointFormat, channelId, broadcaster);
+            var response = await _HttpClient.GetWithHeaderAsync(requestUri, _FunctionsKeyHeaderName, _GetBroadcasterConfigFunctionKey);
+            if (!response.IsSuccessStatusCode)
+                throw new FunctionHelperException($"Error getting broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'. Status code '{response.StatusCode.ToString()}'. Reason phrase '{response.ReasonPhrase}'.");
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<BroadcasterConfigContainer>(content);
+        }
         public async Task<PostBroadcasterConfigResponse> PostBroadcasterConfigAsync(decimal channelId, string broadcaster, BroadcasterConfigContainer container)
         {
             var requestUri = string.Format(_BroadcasterConfigEndpointFormat, channelId, broadcaster);
             var response = await _HttpClient.PostObjectWithHeaderAsync(requestUri, container, _FunctionsKeyHeaderName, _PostBroadcasterConfigFunctionKey);
             if (!response.IsSuccessStatusCode)
-                throw new FunctionHelperException($"Error posting channel top clip config for channel '{channelId}'. Status code '{response.StatusCode.ToString()}'. Reason phrase '{response.ReasonPhrase}'.");
+                throw new FunctionHelperException($"Error posting broadcaster config for channel '{channelId}' broadcaster '{broadcaster}'. Status code '{response.StatusCode.ToString()}'. Reason phrase '{response.ReasonPhrase}'.");
             var content = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<PostBroadcasterConfigResponse>(content);
         }

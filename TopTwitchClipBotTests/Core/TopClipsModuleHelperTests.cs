@@ -84,6 +84,7 @@ namespace TopTwitchClipBotTests.Core
         [Test]
         public void BuildStreamersText_SomeStreamers()
         {
+            _ConfigWrapper.Setup(s => s.GetValue<bool>("EnableNumberOfClipsPerDay")).Returns(true);
             var broadcaster1 = new BroadcasterConfigContainer { Broadcaster = "broadcaster123" };
             var broadcaster2 = new BroadcasterConfigContainer { Broadcaster = "anotherstreamer", NumberOfClipsPerDay = 4 };
             var broadcaster3 = new BroadcasterConfigContainer { Broadcaster = "omegalulmydude" };
@@ -100,10 +101,10 @@ namespace TopTwitchClipBotTests.Core
             _ConfigWrapper.VerifyAll();
             const string expectedResult =
                 "here's your list of streamers" +
-                "```less\nanotherstreamer, 4 clips per day```" +
-                "```diff\nbroadcaster123, no limit```" +
-                "```fix\nomegalulmydude, no limit```" +
-                "```less\nzzzzzzzzzzz, 1 clip per day```";
+                "```less\nanotherstreamer, 4 clips per day, any view count```" +
+                "```diff\nbroadcaster123, no limit, any view count```" +
+                "```fix\nomegalulmydude, no limit, any view count```" +
+                "```less\nzzzzzzzzzzz, 1 clip per day, any view count```";
             Assert.That(result, Is.EqualTo(expectedResult));
         }
         [TestCase(null, "```less\nno limit```")]
@@ -155,7 +156,8 @@ namespace TopTwitchClipBotTests.Core
             const string streamersText = "a list of streamers";
             const string clipsAtATime = "some clips at a time";
             const string timeSpanString = "some time between clips";
-            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText, clipsAtATime, timeSpanString);
+            const string globalMinViewsString = "some global min views";
+            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString);
             context.VerifyAll();
             _ConfigWrapper.VerifyAll();
             Assert.That(result.Author.Value.Name, Is.EqualTo($"Setup for Channel # {channelName}"));
@@ -169,12 +171,15 @@ namespace TopTwitchClipBotTests.Core
             Assert.That(result.Fields[2].Name, Is.EqualTo("Clips at a Time"));
             Assert.That(result.Fields[2].Value, Is.EqualTo(clipsAtATime));
             Assert.That(result.Fields[2].Inline, Is.EqualTo(true));
-            Assert.That(result.Fields[3].Name, Is.EqualTo("Streamers"));
-            Assert.That(result.Fields[3].Value, Is.EqualTo(streamersText));
-            Assert.That(result.Fields[3].Inline, Is.EqualTo(false));
-            Assert.That(result.Fields[4].Name, Is.EqualTo("Need Help?"));
-            Assert.That(result.Fields[4].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[3].Name, Is.EqualTo("Global Min Views?"));
+            Assert.That(result.Fields[3].Value, Is.EqualTo(globalMinViewsString));
+            Assert.That(result.Fields[3].Inline, Is.EqualTo(true));
+            Assert.That(result.Fields[4].Name, Is.EqualTo("Streamers"));
+            Assert.That(result.Fields[4].Value, Is.EqualTo(streamersText));
             Assert.That(result.Fields[4].Inline, Is.EqualTo(false));
+            Assert.That(result.Fields[5].Name, Is.EqualTo("Need Help?"));
+            Assert.That(result.Fields[5].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[5].Inline, Is.EqualTo(false));
         }
     }
 }

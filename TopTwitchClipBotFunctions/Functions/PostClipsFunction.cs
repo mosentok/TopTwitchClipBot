@@ -18,6 +18,7 @@ namespace TopTwitchClipBotFunctions.Functions
             var accept = Environment.GetEnvironmentVariable("TwitchAcceptHeaderValue");
             var botToken = Environment.GetEnvironmentVariable("BotToken");
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
+            var enableNumberOfClipsPerDay = bool.Parse(Environment.GetEnvironmentVariable("EnableNumberOfClipsPerDay"));
             var now = DateTime.Now;
             var yesterday = now.AddDays(-1);
             var logWrapper = new LoggerWrapper(log);
@@ -30,10 +31,12 @@ namespace TopTwitchClipBotFunctions.Functions
                 await discordWrapper.LogInAsync();
                 var containers = await context.GetPendingChannelConfigsAsync(now.Hour);
                 var afterTimeBetweenClipsContainers = helper.AfterTimeBetweenClips(containers, now);
-                var readyToPostContainers = helper.ReadyToPostContainers(afterTimeBetweenClipsContainers, yesterday);
-                var atATimeContainers = helper.AtATimeContainers(readyToPostContainers);
-                var pendingClipContainers = await helper.BuildClipContainers(topClipsEndpoint, clientId, accept, atATimeContainers);
-                var inserted = await helper.InsertHistories(pendingClipContainers);
+                var readyToPostContainers = helper.ReadyToPostContainers(afterTimeBetweenClipsContainers, yesterday, enableNumberOfClipsPerDay);
+                var pendingClipContainers = await helper.BuildClipContainers(topClipsEndpoint, clientId, accept, readyToPostContainers);
+                var clipsWithMinViews = helper.ClipsWithMinViews(pendingClipContainers);
+                var unseenClipContainers = helper.BuildUnseenClipContainers(clipsWithMinViews);
+                var atATimeContainers = helper.AtATimeContainers(unseenClipContainers);
+                var inserted = await helper.InsertHistories(atATimeContainers);
                 var channelContainers = await helper.BuildChannelContainers(inserted);
                 foreach (var channelContainer in channelContainers)
                     await helper.SendMessagesAsync(channelContainer);

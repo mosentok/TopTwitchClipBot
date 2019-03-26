@@ -11,6 +11,7 @@ namespace TopTwitchClipBotModel
         public int? MaxPostingHour { get; set; }
         public int? NumberOfClipsAtATime { get; set; }
         public long? TimeSpanBetweenClipsAsTicks { get; set; }
+        public int? GlobalMinViews { get; set; }
         public List<BroadcasterConfigContainer> Broadcasters { get; set; }
         public ChannelConfigContainer() { }
         public ChannelConfigContainer(ChannelConfig channelConfig)
@@ -21,6 +22,7 @@ namespace TopTwitchClipBotModel
             MaxPostingHour = channelConfig.MaxPostingHour;
             NumberOfClipsAtATime = channelConfig.NumberOfClipsAtATime;
             TimeSpanBetweenClipsAsTicks = channelConfig.TimeSpanBetweenClipsAsTicks;
+            GlobalMinViews = channelConfig.GlobalMinViews;
             Broadcasters = channelConfig.BroadcasterConfigs.Select(s => new BroadcasterConfigContainer(s)).ToList();
         }
         public ChannelConfigContainer FromPostingHours(int? minPostingHour, int? maxPostingHour)
@@ -32,11 +34,11 @@ namespace TopTwitchClipBotModel
                 MinPostingHour = minPostingHour,
                 MaxPostingHour = maxPostingHour,
                 NumberOfClipsAtATime = NumberOfClipsAtATime,
-                TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks
+                TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
+                GlobalMinViews = GlobalMinViews
             };
         }
-        //TODO int should be int?
-        public ChannelConfigContainer FromClipsAtATime(int numberOfClipsAtATime)
+        public ChannelConfigContainer FromClipsAtATime(int? numberOfClipsAtATime)
         {
             return new ChannelConfigContainer
             {
@@ -45,7 +47,8 @@ namespace TopTwitchClipBotModel
                 MinPostingHour = MinPostingHour,
                 MaxPostingHour = MaxPostingHour,
                 NumberOfClipsAtATime = numberOfClipsAtATime,
-                TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks
+                TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
+                GlobalMinViews = GlobalMinViews
             };
         }
         public ChannelConfigContainer FromTimeSpanBetweenClipsAsTicks(long? timeSpanBetweenClipsAsTicks)
@@ -57,7 +60,21 @@ namespace TopTwitchClipBotModel
                 MinPostingHour = MinPostingHour,
                 MaxPostingHour = MaxPostingHour,
                 NumberOfClipsAtATime = NumberOfClipsAtATime,
-                TimeSpanBetweenClipsAsTicks = timeSpanBetweenClipsAsTicks
+                TimeSpanBetweenClipsAsTicks = timeSpanBetweenClipsAsTicks,
+                GlobalMinViews = GlobalMinViews
+            };
+        }
+        public ChannelConfigContainer FromGlobalMinViews(int? globalMinViews)
+        {
+            return new ChannelConfigContainer
+            {
+                ChannelId = ChannelId,
+                Prefix = Prefix,
+                MinPostingHour = MinPostingHour,
+                MaxPostingHour = MaxPostingHour,
+                NumberOfClipsAtATime = NumberOfClipsAtATime,
+                TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
+                GlobalMinViews = globalMinViews
             };
         }
     }
