@@ -25,14 +25,15 @@ namespace TopTwitchClipBotCore.Modules
             _ConfigWrapper = configWrapper;
         }
         [Command(nameof(Get))]
-        [Alias(nameof(Get), "", "Config", "Setup")]
+        [Alias("", "Config", "Setup")]
         public async Task Get()
         {
             var result = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
             await ReplyAsync(result);
         }
-        [Command(nameof(Between))]
-        public async Task Between([Remainder] string input)
+        [Command("Post When")]
+        [Alias("Post Between")]
+        public async Task PostWhen([Remainder] string input)
         {
             var shouldTurnCommandOff = _TopClipsModuleHelper.ShouldTurnCommandOff(input);
             if (shouldTurnCommandOff)
@@ -128,8 +129,8 @@ namespace TopTwitchClipBotCore.Modules
                 _Log.LogError(ex, $"Error setting channel ID '{Context.Channel.Id}' interval '{interval}' time '{time.ToString()}'.");
             }
         }
-        //TODO consider special string input like "reset"
         [Command("At A Time")]
+        [Alias("Clips At A Time")]
         public async Task AtATime(int numberOfClipsAtATime)
         {
             var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
@@ -161,7 +162,14 @@ namespace TopTwitchClipBotCore.Modules
             var timeSpanString = _TopClipsModuleHelper.TimeSpanBetweenClipsAsString(result);
             var globalMinViewsString = _TopClipsModuleHelper.GlobalMinViewsAsString(result);
             var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString);
-            await ReplyAsync(message: string.Empty, embed: embed);
+            try
+            {
+                await ReplyAsync(message: string.Empty, embed: embed);
+            }
+            catch (Exception ex)
+            {
+                _Log.LogError(ex, $"Error replying to channel {Context.Channel.Id}.");
+            }
         }
     }
 }
