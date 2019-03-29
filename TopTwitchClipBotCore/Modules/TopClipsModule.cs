@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -162,14 +163,19 @@ namespace TopTwitchClipBotCore.Modules
             var timeSpanString = _TopClipsModuleHelper.TimeSpanBetweenClipsAsString(result);
             var globalMinViewsString = _TopClipsModuleHelper.GlobalMinViewsAsString(result);
             var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString);
+            await ReplyAsync(message: string.Empty, embed: embed);
+        }
+        protected override async Task<IUserMessage> ReplyAsync(string message = null, bool isTTS = false, Embed embed = null, RequestOptions options = null)
+        {
             try
             {
-                await ReplyAsync(message: string.Empty, embed: embed);
+                return await base.ReplyAsync(message, isTTS, embed, options);
             }
             catch (Exception ex)
             {
                 _Log.LogError(ex, $"Error replying to channel {Context.Channel.Id}.");
             }
+            return null;
         }
     }
 }
