@@ -58,6 +58,19 @@ namespace TopTwitchClipBotTests.Core
             var result = _TopClipsModuleHelper.ShouldDeleteAll(broadcaster);
             Assert.That(result, Is.EqualTo(expectedResult));
         }
+        [TestCase(-12, 14, 0, true)]
+        [TestCase(-12, 14, -12, true)]
+        [TestCase(-12, 14, 14, true)]
+        [TestCase(-12, 14, -13, false)]
+        [TestCase(-12, 14, 15, false)]
+        public void IsValidUtcHourOffset(decimal min, decimal max, decimal utcHourOffset, bool expectedResult)
+        {
+            _ConfigWrapper.Setup(s => s.GetValue<decimal>("UtcHourOffsetMin")).Returns(min);
+            _ConfigWrapper.Setup(s => s.GetValue<decimal>("UtcHourOffsetMax")).Returns(max);
+            var result = _TopClipsModuleHelper.IsValidUtcHourOffset(utcHourOffset);
+            _ConfigWrapper.VerifyAll();
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
         [TestCase(8, 22, "```fix\nbetween 8 and 22```")]
         [TestCase(8, null, "```fix\nall the time```")]
         [TestCase(null, 22, "```fix\nall the time```")]
