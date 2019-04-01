@@ -17,6 +17,8 @@ namespace TopTwitchClipBotModel
         public int? NumberOfClipsAtATime { get; set; }
         public long? TimeSpanBetweenClipsAsTicks { get; set; }
         public int? GlobalMinViews { get; set; }
+        [Column(TypeName = "decimal(3,1)")]
+        public decimal? UtcHourOffset { get; set; }
         public virtual ICollection<BroadcasterConfig> BroadcasterConfigs { get; set; }
     }
 }

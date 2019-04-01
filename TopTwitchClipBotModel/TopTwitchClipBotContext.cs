@@ -44,6 +44,7 @@ namespace TopTwitchClipBotModel
                 channelConfig.NumberOfClipsAtATime = container.NumberOfClipsAtATime;
                 channelConfig.TimeSpanBetweenClipsAsTicks = container.TimeSpanBetweenClipsAsTicks;
                 channelConfig.GlobalMinViews = container.GlobalMinViews;
+                channelConfig.UtcHourOffset = container.UtcHourOffset;
             }
             else
             {
@@ -54,7 +55,8 @@ namespace TopTwitchClipBotModel
                     MaxPostingHour = container.MaxPostingHour,
                     NumberOfClipsAtATime = container.NumberOfClipsAtATime,
                     TimeSpanBetweenClipsAsTicks = container.TimeSpanBetweenClipsAsTicks,
-                    GlobalMinViews = container.GlobalMinViews
+                    GlobalMinViews = container.GlobalMinViews,
+                    UtcHourOffset = container.UtcHourOffset
                 };
                 ChannelConfigs.Add(channelConfig);
             }
@@ -132,6 +134,7 @@ namespace TopTwitchClipBotModel
                               NumberOfClipsAtATime = s.NumberOfClipsAtATime,
                               TimeSpanBetweenClipsAsTicks = s.TimeSpanBetweenClipsAsTicks,
                               GlobalMinViews = s.GlobalMinViews,
+                              UtcHourOffset = s.UtcHourOffset,
                               Broadcasters = s.BroadcasterConfigs.Select(t => new PendingBroadcasterConfig
                               {
                                   Id = t.Id,

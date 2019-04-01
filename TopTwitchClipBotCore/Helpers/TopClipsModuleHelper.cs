@@ -35,6 +35,12 @@ namespace TopTwitchClipBotCore.Helpers
         {
             return broadcaster.Equals("all", StringComparison.CurrentCultureIgnoreCase) || broadcaster.Equals("all broadcasters", StringComparison.CurrentCultureIgnoreCase);
         }
+        public bool IsValidUtcHourOffset(decimal utcHourOffset)
+        {
+            var min = _ConfigWrapper.GetValue<decimal>("UtcHourOffsetMin");
+            var max = _ConfigWrapper.GetValue<decimal>("UtcHourOffsetMax");
+            return min <= utcHourOffset && utcHourOffset <= max;
+        }
         public string DeterminePostWhen(ChannelConfigContainer container)
         {
             string output;

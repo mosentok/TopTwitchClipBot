@@ -155,6 +155,20 @@ namespace TopTwitchClipBotCore.Modules
             var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
             await ReplyAsync(result);
         }
+        [Command(nameof(TimeZone))]
+        [Alias("Time Zone", "Utc Offset", "UtcOffset")]
+        public async Task TimeZone(decimal utcHourOffset)
+        {
+            var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
+            var isValid = _TopClipsModuleHelper.IsValidUtcHourOffset(utcHourOffset);
+            ChannelConfigContainer container;
+            if (isValid)
+                container = match.FromUtcHourOffset(utcHourOffset);
+            else
+                container = match.FromUtcHourOffset(null);
+            var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+            await ReplyAsync(result);
+        }
         async Task ReplyAsync(ChannelConfigContainer result)
         {
             var streamersText = _TopClipsModuleHelper.BuildStreamersText(result);
