@@ -176,7 +176,8 @@ namespace TopTwitchClipBotCore.Modules
             var clipsAtATime = _TopClipsModuleHelper.DetermineClipsAtATime(result);
             var timeSpanString = _TopClipsModuleHelper.TimeSpanBetweenClipsAsString(result);
             var globalMinViewsString = _TopClipsModuleHelper.GlobalMinViewsAsString(result);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString);
+            var timeZoneString = _TopClipsModuleHelper.BuildTimeZoneString(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString, timeZoneString);
             await ReplyAsync(message: string.Empty, embed: embed);
         }
         protected override async Task<IUserMessage> ReplyAsync(string message = null, bool isTTS = false, Embed embed = null, RequestOptions options = null)

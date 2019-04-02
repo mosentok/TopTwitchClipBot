@@ -161,7 +161,20 @@ namespace TopTwitchClipBotCore.Helpers
             var globalMinViewsFormat = _ConfigWrapper["GlobalMinViewsFormat"].Replace(newLineDelimiter, "\n");
             return string.Format(globalMinViewsFormat, output);
         }
-        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString)
+        public string BuildTimeZoneString(ChannelConfigContainer result)
+        {
+            string output;
+            if (!result.UtcHourOffset.HasValue)
+                output = "none";
+            else if (result.UtcHourOffset.Value >= 0)
+                output = $"UTC+{result.UtcHourOffset.Value}";
+            else
+                output = $"UTC-{result.UtcHourOffset.Value}";
+            var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
+            var timeZoneFormat = _ConfigWrapper["TimeZoneFormat"].Replace(newLineDelimiter, "\n");
+            return string.Format(timeZoneFormat, output);
+        }
+        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString, string timeZoneString)
         {
             return new EmbedBuilder()
                 .WithAuthor($"Setup for Channel # {context.Channel.Name}", context.Guild.IconUrl)
@@ -169,6 +182,7 @@ namespace TopTwitchClipBotCore.Helpers
                 .AddField("Time Between Clips?", timeSpanString, true)
                 .AddField("Clips at a Time", clipsAtATime, true)
                 .AddField("Global Min Views?", globalMinViewsString, true)
+                .AddField("Time Zone", timeZoneString, true)
                 .AddField("Streamers", streamersText)
                 .AddField("Need Help?", _ConfigWrapper["HelpQuestionFieldText"])
                 .Build();

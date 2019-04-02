@@ -19,7 +19,7 @@ namespace TopTwitchClipBotFunctions.Functions
             var botToken = Environment.GetEnvironmentVariable("BotToken");
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
             var enableNumberOfClipsPerDay = bool.Parse(Environment.GetEnvironmentVariable("EnableNumberOfClipsPerDay"));
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var yesterday = now.AddDays(-1);
             var logWrapper = new LoggerWrapper(log);
             using (var twitchWrapper = new TwitchWrapper())
