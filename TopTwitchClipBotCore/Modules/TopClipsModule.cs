@@ -3,6 +3,7 @@ using Discord.Commands;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using TopTwitchClipBotCore.Attributes;
 using TopTwitchClipBotCore.Enums;
 using TopTwitchClipBotCore.Exceptions;
 using TopTwitchClipBotCore.Helpers;
@@ -36,6 +37,7 @@ namespace TopTwitchClipBotCore.Modules
         [Alias("Post Between")]
         public async Task PostWhen([Remainder] string input)
         {
+            //TODO move "off" logic to another command
             var shouldTurnCommandOff = _TopClipsModuleHelper.ShouldTurnCommandOff(input);
             if (shouldTurnCommandOff)
             {
@@ -117,6 +119,7 @@ namespace TopTwitchClipBotCore.Modules
         [Command("Time Between Clips")]
         public async Task TimeBetweenClips(int interval, Time time)
         {
+            //TODO remove try/catch because time param must be valid for Discord.Net to invoke this method
             try
             {
                 var ticks = _TopClipsModuleHelper.TicksFromIntervalTime(interval, time);
@@ -157,15 +160,10 @@ namespace TopTwitchClipBotCore.Modules
         }
         [Command(nameof(TimeZone))]
         [Alias("Time Zone", "Utc Offset", "UtcOffset")]
-        public async Task TimeZone(decimal utcHourOffset)
+        public async Task TimeZone([ValidUtcOffset] decimal utcHourOffset)
         {
             var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            var isValid = _TopClipsModuleHelper.IsValidUtcHourOffset(utcHourOffset);
-            ChannelConfigContainer container;
-            if (isValid)
-                container = match.FromUtcHourOffset(utcHourOffset);
-            else
-                container = match.FromUtcHourOffset(null);
+            var container = match.FromUtcHourOffset(utcHourOffset);
             var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
             await ReplyAsync(result);
         }

@@ -35,11 +35,16 @@ namespace TopTwitchClipBotCore.Helpers
         {
             return broadcaster.Equals("all", StringComparison.CurrentCultureIgnoreCase) || broadcaster.Equals("all broadcasters", StringComparison.CurrentCultureIgnoreCase);
         }
-        public bool IsValidUtcHourOffset(decimal utcHourOffset)
+        public bool IsInUtcRange(decimal utcHourOffset)
         {
             var min = _ConfigWrapper.GetValue<decimal>("UtcHourOffsetMin");
             var max = _ConfigWrapper.GetValue<decimal>("UtcHourOffsetMax");
             return min <= utcHourOffset && utcHourOffset <= max;
+        }
+        public bool IsValidTimeZoneFraction(decimal utcHourOffset)
+        { 
+            var validTimeZoneFractions = _ConfigWrapper.Get<List<decimal>>("ValidTimeZoneFractions");
+            return utcHourOffset % 1 == 0 || validTimeZoneFractions.Any(s => utcHourOffset % s == 0);
         }
         public string DeterminePostWhen(ChannelConfigContainer container)
         {
@@ -166,10 +171,14 @@ namespace TopTwitchClipBotCore.Helpers
             string output;
             if (!result.UtcHourOffset.HasValue)
                 output = "none";
-            else if (result.UtcHourOffset.Value >= 0)
-                output = $"UTC+{result.UtcHourOffset.Value}";
             else
-                output = $"UTC-{result.UtcHourOffset.Value}";
+            {
+                var utcHourOffsetString = result.UtcHourOffset.Value.ToString("#.#");
+                if (result.UtcHourOffset.Value >= 0)
+                    output = $"UTC+{utcHourOffsetString}";
+                else
+                    output = $"UTC{utcHourOffsetString}";
+            }
             var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
             var timeZoneFormat = _ConfigWrapper["TimeZoneFormat"].Replace(newLineDelimiter, "\n");
             return string.Format(timeZoneFormat, output);

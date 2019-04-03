@@ -62,7 +62,13 @@ namespace TopTwitchClipBotCore
                 result.Error.Value != CommandError.UnknownCommand &&
                 result.Error.Value != CommandError.BadArgCount &&
                 result is ExecuteResult executeResult)
-                _Log.LogError(executeResult.Exception, $"Error processing message content '{shouldProcess.UserMessage.Content}'.");
+            {
+                var errorMessage = $"Error processing message content '{shouldProcess.UserMessage.Content}'. Error reason '{executeResult.ErrorReason}'.";
+                if (executeResult.Error.Value == CommandError.UnmetPrecondition)
+                    _Log.LogWarning(executeResult.Exception, errorMessage);
+                else
+                    _Log.LogError(executeResult.Exception, errorMessage);
+            }
         }
         Task LogReceived(LogMessage logMessage)
         {

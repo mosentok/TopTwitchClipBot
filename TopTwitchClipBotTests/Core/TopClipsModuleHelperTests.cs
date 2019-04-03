@@ -63,11 +63,25 @@ namespace TopTwitchClipBotTests.Core
         [TestCase(-12, 14, 14, true)]
         [TestCase(-12, 14, -13, false)]
         [TestCase(-12, 14, 15, false)]
-        public void IsValidUtcHourOffset(decimal min, decimal max, decimal utcHourOffset, bool expectedResult)
+        public void IsInUtcRange(decimal min, decimal max, decimal utcHourOffset, bool expectedResult)
         {
             _ConfigWrapper.Setup(s => s.GetValue<decimal>("UtcHourOffsetMin")).Returns(min);
             _ConfigWrapper.Setup(s => s.GetValue<decimal>("UtcHourOffsetMax")).Returns(max);
-            var result = _TopClipsModuleHelper.IsValidUtcHourOffset(utcHourOffset);
+            var result = _TopClipsModuleHelper.IsInUtcRange(utcHourOffset);
+            _ConfigWrapper.VerifyAll();
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
+        [TestCase(0, true)]
+        [TestCase(0.5, true)]
+        [TestCase(0.66, false)]
+        [TestCase(0.75, true)]
+        [TestCase(0, true)]
+        [TestCase(1, true)]
+        public void IsValidTimeZoneFraction(decimal utcHourOffset, bool expectedResult)
+        {
+            var validFractions = new List<decimal> { 0.5m, 0.75m };
+            _ConfigWrapper.Setup(s => s.Get<List<decimal>>("ValidTimeZoneFractions")).Returns(validFractions);
+            var result = _TopClipsModuleHelper.IsValidTimeZoneFraction(utcHourOffset);
             _ConfigWrapper.VerifyAll();
             Assert.That(result, Is.EqualTo(expectedResult));
         }
