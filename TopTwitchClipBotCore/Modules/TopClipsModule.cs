@@ -160,7 +160,11 @@ namespace TopTwitchClipBotCore.Modules
         }
         [Command(nameof(TimeZone))]
         [Alias("Time Zone", "Utc Offset", "UtcOffset")]
-        public async Task TimeZone([ValidUtcOffset] decimal utcHourOffset)
+        public async Task TimeZone([ValidUtcOffset] decimal utcHourOffset) => await UpdateTimeZone(utcHourOffset);
+        [Command(nameof(TimeZone))]
+        [Alias("Time Zone", "Utc Offset", "UtcOffset")]
+        public async Task TimeZone([OffCommand] string off) => await UpdateTimeZone(null);
+        async Task UpdateTimeZone(decimal? utcHourOffset)
         {
             var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
             var container = match.FromUtcHourOffset(utcHourOffset);

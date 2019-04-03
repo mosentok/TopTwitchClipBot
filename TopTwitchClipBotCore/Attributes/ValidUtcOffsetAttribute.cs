@@ -7,7 +7,7 @@ using TopTwitchClipBotCore.Helpers;
 namespace TopTwitchClipBotCore.Attributes
 {
     [AttributeUsage(AttributeTargets.Parameter)]
-    public class ValidUtcOffsetAttribute : ParameterPreconditionAttribute
+    public sealed class ValidUtcOffsetAttribute : ParameterPreconditionAttribute
     {
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, ParameterInfo parameter, object value, IServiceProvider services)
         {
