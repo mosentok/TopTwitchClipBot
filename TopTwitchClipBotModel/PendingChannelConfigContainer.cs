@@ -12,6 +12,7 @@ namespace TopTwitchClipBotModel
         public long? TimeSpanBetweenClipsAsTicks { get; set; }
         public int? GlobalMinViews { get; set; }
         public decimal? UtcHourOffset { get; set; }
+        public string ClipOrder { get; set; }
         public List<PendingBroadcasterConfig> Broadcasters { get; set; }
         public PendingChannelConfigContainer FromBroadcasters(List<PendingBroadcasterConfig> broadcasters)
         {
@@ -25,6 +26,7 @@ namespace TopTwitchClipBotModel
                 TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
                 GlobalMinViews = GlobalMinViews,
                 UtcHourOffset = UtcHourOffset,
+                ClipOrder = ClipOrder,
                 Broadcasters = broadcasters
             };
         }

@@ -37,7 +37,7 @@ namespace TopTwitchClipBotFunctions.Helpers
         {
             if (!channelContainer.TimeSpanBetweenClipsAsTicks.HasValue)
                 return true;
-            var histories = channelContainer.Broadcasters.SelectMany(s => s.ExistingHistories);
+            var histories = channelContainer.Broadcasters.SelectMany(s => s.ExistingHistories).ToList();
             if (!histories.Any())
                 return true;
             var latestHistoryStamp = histories.Max(s => s.Stamp);
@@ -85,8 +85,25 @@ namespace TopTwitchClipBotFunctions.Helpers
                     var numberOfClipsAtATime = pendingChannelConfigContainer.NumberOfClipsAtATime;
                     if (!numberOfClipsAtATime.HasValue)
                         return unseenChannelClipsContainer;
-                    var unseenClips = unseenChannelClipsContainer.UnseenClips.Take(numberOfClipsAtATime.Value).ToList();
-                    return new UnseenChannelClipsContainer(pendingChannelConfigContainer, unseenClips);
+                    var ordered = OrderUnseenClips();
+                    var takenAtATime = ordered.Take(numberOfClipsAtATime.Value).ToList();
+                    return new UnseenChannelClipsContainer(pendingChannelConfigContainer, takenAtATime);
+                    IOrderedEnumerable<ClipHistoryContainer> OrderUnseenClips()
+                    {
+                        var clipOrder = unseenChannelClipsContainer.PendingChannelConfigContainer.ClipOrder;
+                        if (string.IsNullOrEmpty(clipOrder))
+                            return unseenChannelClipsContainer.UnseenClips.OrderBy(s => s.BroadcasterLastSeenAt);
+                        switch (clipOrder.ToLower())
+                        {
+                            case "views":
+                            case "view count":
+                                return unseenChannelClipsContainer.UnseenClips.OrderByDescending(s => s.Views);
+                            case "oldest first":
+                            case "oldest":
+                            default:
+                                return unseenChannelClipsContainer.UnseenClips.OrderBy(s => s.BroadcasterLastSeenAt);
+                        }
+                    }
                 }
             }
             return results;
@@ -102,10 +119,12 @@ namespace TopTwitchClipBotFunctions.Helpers
                     var firstUnseenClip = clipContainer.Clips.FirstOrDefault(t => !clipContainer.ExistingHistories.Any(u => u.Slug == t.Slug));
                     if (firstUnseenClip != null)
                     {
+                        var broadcasterLastSeenAt = BroadcasterLastSeenAt();
                         var historyContainer = new ClipHistoryContainer
                         {
                             ChannelId = clipContainer.ChannelId,
                             BroadcasterConfigId = clipContainer.Id,
+                            BroadcasterLastSeenAt = broadcasterLastSeenAt,
                             Slug = firstUnseenClip.Slug,
                             ClipUrl = firstUnseenClip.Url,
                             Stamp = DateTime.Now,
@@ -116,6 +135,12 @@ namespace TopTwitchClipBotFunctions.Helpers
                         };
                         unseenClips.Add(historyContainer);
                     }
+                    DateTime? BroadcasterLastSeenAt()
+                    {
+                        if (!clipContainer.ExistingHistories.Any())
+                            return null;
+                        return clipContainer.ExistingHistories.Max(s => s.Stamp);
+                }
                 }
                 if (unseenClips.Any())
                     results.Add(new UnseenChannelClipsContainer(channelClipsContainer.PendingChannelConfigContainer, unseenClips));
