@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -35,9 +36,10 @@ namespace TopTwitchClipBotFunctions.Functions
                 var pendingClipContainers = await helper.BuildClipContainers(topClipsEndpoint, clientId, accept, readyToPostContainers);
                 var clipsWithMinViews = helper.ClipsWithMinViews(pendingClipContainers);
                 var unseenClipContainers = helper.BuildUnseenClipContainers(clipsWithMinViews);
-                var atATimeContainers = helper.AtATimeContainers(unseenClipContainers);
-                var inserted = await helper.InsertHistories(atATimeContainers);
-                var channelContainers = await helper.BuildChannelContainers(inserted);
+                var results = helper.AtATimeContainers(unseenClipContainers);
+                var unseenClips = results.SelectMany(s => s.UnseenClips).ToList();
+                await helper.InsertHistories(unseenClips);
+                var channelContainers = await helper.BuildChannelContainers(results);
                 foreach (var channelContainer in channelContainers)
                     await helper.SendMessagesAsync(channelContainer);
                 await discordWrapper.LogOutAsync();

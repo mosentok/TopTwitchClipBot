@@ -90,17 +90,21 @@ namespace TopTwitchClipBotTests.Functions
             var results = _Helper.ClipsWithMinViews(channelClipsContainers);
             Assert.That(results.Count(s => s.PendingChannelConfigContainer.ChannelId == id), Is.EqualTo(expectedResult));
         }
-        [TestCase("a title", 123, 456.78f, "2019-02-12T12:34:56", "https://twitch.tv/clip",
+        [TestCase("a title", 123, 456.78f, "2019-02-12T12:34:56", "https://twitch.tv/clip", null,
             "**a title**\r\n**123** views, **456.78s** long, created at **2/12/2019 12:34:56 PM UTC**\r\nhttps://twitch.tv/clip")]
-        public async Task SendMessagesAsync(string title, int views, float duration, string createdAtString, string clipUrl, string expectedMessage)
+        [TestCase("a title", 123, 456.78f, "2019-02-12T12:34:56", "https://twitch.tv/clip", 3.5,
+            "**a title**\r\n**123** views, **456.78s** long, created at **2/12/2019 12:34:56 PM**\r\nhttps://twitch.tv/clip")]
+        public async Task SendMessagesAsync(string title, int views, float duration, string createdAtString, string clipUrl, decimal? utcHourOffset, string expectedMessage)
         {
             var createdAt = DateTime.Parse(createdAtString);
             var channel = new Mock<IMessageChannel>();
             var insertedContainer = new ClipHistoryContainer { ClipUrl = clipUrl, Title = title, Views = views, Duration = duration, CreatedAt = createdAt };
             var userMessage = new Mock<IUserMessage>();
             channel.Setup(s => s.SendMessageAsync(expectedMessage, It.IsAny<bool>(), It.IsAny<Embed>(), It.IsAny<RequestOptions>())).ReturnsAsync(userMessage.Object);
-            var inserted = new List<ClipHistoryContainer> { insertedContainer };
-            var channelContainer = new ChannelContainer(inserted, channel.Object);
+            var unseenClips = new List<ClipHistoryContainer> { insertedContainer };
+            var pendingChannelConfigContainer = new PendingChannelConfigContainer { UtcHourOffset = utcHourOffset };
+            var unseenChannelClipsContainer = new UnseenChannelClipsContainer(pendingChannelConfigContainer, unseenClips);
+            var channelContainer = new ChannelContainer(unseenChannelClipsContainer, channel.Object);
             var task = _Helper.SendMessagesAsync(channelContainer);
             await task;
             /*
