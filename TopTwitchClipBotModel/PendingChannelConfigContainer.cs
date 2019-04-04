@@ -11,18 +11,22 @@ namespace TopTwitchClipBotModel
         public int? NumberOfClipsAtATime { get; set; }
         public long? TimeSpanBetweenClipsAsTicks { get; set; }
         public int? GlobalMinViews { get; set; }
+        public decimal? UtcHourOffset { get; set; }
         public List<PendingBroadcasterConfig> Broadcasters { get; set; }
-        public PendingChannelConfigContainer() { }
-        public PendingChannelConfigContainer(PendingChannelConfigContainer channelContainer, List<PendingBroadcasterConfig> broadcasters)
+        public PendingChannelConfigContainer FromBroadcasters(List<PendingBroadcasterConfig> broadcasters)
         {
-            ChannelId = channelContainer.ChannelId;
-            Prefix = channelContainer.Prefix;
-            MinPostingHour = channelContainer.MinPostingHour;
-            MaxPostingHour = channelContainer.MaxPostingHour;
-            NumberOfClipsAtATime = channelContainer.NumberOfClipsAtATime;
-            TimeSpanBetweenClipsAsTicks = channelContainer.TimeSpanBetweenClipsAsTicks;
-            GlobalMinViews = channelContainer.GlobalMinViews;
-            Broadcasters = broadcasters;
+            return new PendingChannelConfigContainer
+            {
+                ChannelId = ChannelId,
+                Prefix = Prefix,
+                MinPostingHour = MinPostingHour,
+                MaxPostingHour = MaxPostingHour,
+                NumberOfClipsAtATime = NumberOfClipsAtATime,
+                TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
+                GlobalMinViews = GlobalMinViews,
+                UtcHourOffset = UtcHourOffset,
+                Broadcasters = broadcasters
+            };
         }
     }
 }

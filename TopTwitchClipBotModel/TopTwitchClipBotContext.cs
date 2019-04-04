@@ -44,6 +44,7 @@ namespace TopTwitchClipBotModel
                 channelConfig.NumberOfClipsAtATime = container.NumberOfClipsAtATime;
                 channelConfig.TimeSpanBetweenClipsAsTicks = container.TimeSpanBetweenClipsAsTicks;
                 channelConfig.GlobalMinViews = container.GlobalMinViews;
+                channelConfig.UtcHourOffset = container.UtcHourOffset;
             }
             else
             {
@@ -54,7 +55,8 @@ namespace TopTwitchClipBotModel
                     MaxPostingHour = container.MaxPostingHour,
                     NumberOfClipsAtATime = container.NumberOfClipsAtATime,
                     TimeSpanBetweenClipsAsTicks = container.TimeSpanBetweenClipsAsTicks,
-                    GlobalMinViews = container.GlobalMinViews
+                    GlobalMinViews = container.GlobalMinViews,
+                    UtcHourOffset = container.UtcHourOffset
                 };
                 ChannelConfigs.Add(channelConfig);
             }
@@ -117,12 +119,17 @@ namespace TopTwitchClipBotModel
             await SaveChangesAsync();
             return containers;
         }
-        public async Task<List<PendingChannelConfigContainer>> GetPendingChannelConfigsAsync(int nowHour)
+        public async Task<List<PendingChannelConfigContainer>> GetPendingChannelConfigsAsync(int nowUtcHour)
         {
             return await (from s in ChannelConfigs
+                          let offsetHour = s.UtcHourOffset.HasValue ? //if they set an offset
+                            (nowUtcHour + s.UtcHourOffset.Value + 24) % 24 : //add offset, in case that's negative add 24, altogether mod 24
+                            nowUtcHour //else no offset to use
                           where s.MinPostingHour == null || s.MaxPostingHour == null ||
-                               (s.MinPostingHour < s.MaxPostingHour && s.MinPostingHour <= nowHour && nowHour < s.MaxPostingHour) || //if the range spans inside a single day, then now hour must be between min and max, else...
-                               (s.MinPostingHour > s.MaxPostingHour && (s.MinPostingHour <= nowHour || nowHour < s.MaxPostingHour))
+                               (s.MinPostingHour < s.MaxPostingHour && //if the range spans inside a single day
+                                s.MinPostingHour <= offsetHour && offsetHour < s.MaxPostingHour) || //then now hour must be between at least min and less than max
+                               (s.MinPostingHour > s.MaxPostingHour && //else if the range spans overnight into next day
+                               (s.MinPostingHour <= offsetHour || offsetHour < s.MaxPostingHour)) //then now must be at least min or less than max
                           select new PendingChannelConfigContainer
                           {
                               ChannelId = s.ChannelId,
@@ -132,6 +139,7 @@ namespace TopTwitchClipBotModel
                               NumberOfClipsAtATime = s.NumberOfClipsAtATime,
                               TimeSpanBetweenClipsAsTicks = s.TimeSpanBetweenClipsAsTicks,
                               GlobalMinViews = s.GlobalMinViews,
+                              UtcHourOffset = s.UtcHourOffset,
                               Broadcasters = s.BroadcasterConfigs.Select(t => new PendingBroadcasterConfig
                               {
                                   Id = t.Id,

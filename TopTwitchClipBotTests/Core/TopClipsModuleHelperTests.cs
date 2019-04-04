@@ -58,6 +58,33 @@ namespace TopTwitchClipBotTests.Core
             var result = _TopClipsModuleHelper.ShouldDeleteAll(broadcaster);
             Assert.That(result, Is.EqualTo(expectedResult));
         }
+        [TestCase(-12, 14, 0, true)]
+        [TestCase(-12, 14, -12, true)]
+        [TestCase(-12, 14, 14, true)]
+        [TestCase(-12, 14, -13, false)]
+        [TestCase(-12, 14, 15, false)]
+        public void IsInUtcRange(decimal min, decimal max, decimal utcHourOffset, bool expectedResult)
+        {
+            _ConfigWrapper.Setup(s => s.GetValue<decimal>("UtcHourOffsetMin")).Returns(min);
+            _ConfigWrapper.Setup(s => s.GetValue<decimal>("UtcHourOffsetMax")).Returns(max);
+            var result = _TopClipsModuleHelper.IsInUtcRange(utcHourOffset);
+            _ConfigWrapper.VerifyAll();
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
+        [TestCase(0, true)]
+        [TestCase(0.5, true)]
+        [TestCase(0.66, false)]
+        [TestCase(0.75, true)]
+        [TestCase(0, true)]
+        [TestCase(1, true)]
+        public void IsValidTimeZoneFraction(decimal utcHourOffset, bool expectedResult)
+        {
+            var validFractions = new List<decimal> { 0.5m, 0.75m };
+            _ConfigWrapper.Setup(s => s.Get<List<decimal>>("ValidTimeZoneFractions")).Returns(validFractions);
+            var result = _TopClipsModuleHelper.IsValidTimeZoneFraction(utcHourOffset);
+            _ConfigWrapper.VerifyAll();
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
         [TestCase(8, 22, "```fix\nbetween 8 and 22```")]
         [TestCase(8, null, "```fix\nall the time```")]
         [TestCase(null, 22, "```fix\nall the time```")]
@@ -157,7 +184,8 @@ namespace TopTwitchClipBotTests.Core
             const string clipsAtATime = "some clips at a time";
             const string timeSpanString = "some time between clips";
             const string globalMinViewsString = "some global min views";
-            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString);
+            const string timeZoneString = "some time zone string";
+            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString, timeZoneString);
             context.VerifyAll();
             _ConfigWrapper.VerifyAll();
             Assert.That(result.Author.Value.Name, Is.EqualTo($"Setup for Channel # {channelName}"));
@@ -174,12 +202,15 @@ namespace TopTwitchClipBotTests.Core
             Assert.That(result.Fields[3].Name, Is.EqualTo("Global Min Views?"));
             Assert.That(result.Fields[3].Value, Is.EqualTo(globalMinViewsString));
             Assert.That(result.Fields[3].Inline, Is.EqualTo(true));
-            Assert.That(result.Fields[4].Name, Is.EqualTo("Streamers"));
-            Assert.That(result.Fields[4].Value, Is.EqualTo(streamersText));
-            Assert.That(result.Fields[4].Inline, Is.EqualTo(false));
-            Assert.That(result.Fields[5].Name, Is.EqualTo("Need Help?"));
-            Assert.That(result.Fields[5].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[4].Name, Is.EqualTo("Time Zone"));
+            Assert.That(result.Fields[4].Value, Is.EqualTo(timeZoneString));
+            Assert.That(result.Fields[4].Inline, Is.EqualTo(true));
+            Assert.That(result.Fields[5].Name, Is.EqualTo("Streamers"));
+            Assert.That(result.Fields[5].Value, Is.EqualTo(streamersText));
             Assert.That(result.Fields[5].Inline, Is.EqualTo(false));
+            Assert.That(result.Fields[6].Name, Is.EqualTo("Need Help?"));
+            Assert.That(result.Fields[6].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[6].Inline, Is.EqualTo(false));
         }
     }
 }

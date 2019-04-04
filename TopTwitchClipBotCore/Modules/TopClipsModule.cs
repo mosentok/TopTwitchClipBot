@@ -3,6 +3,7 @@ using Discord.Commands;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using TopTwitchClipBotCore.Attributes;
 using TopTwitchClipBotCore.Enums;
 using TopTwitchClipBotCore.Exceptions;
 using TopTwitchClipBotCore.Helpers;
@@ -36,6 +37,7 @@ namespace TopTwitchClipBotCore.Modules
         [Alias("Post Between")]
         public async Task PostWhen([Remainder] string input)
         {
+            //TODO move "off" logic to another command
             var shouldTurnCommandOff = _TopClipsModuleHelper.ShouldTurnCommandOff(input);
             if (shouldTurnCommandOff)
             {
@@ -117,6 +119,7 @@ namespace TopTwitchClipBotCore.Modules
         [Command("Time Between Clips")]
         public async Task TimeBetweenClips(int interval, Time time)
         {
+            //TODO remove try/catch because time param must be valid for Discord.Net to invoke this method
             try
             {
                 var ticks = _TopClipsModuleHelper.TicksFromIntervalTime(interval, time);
@@ -155,6 +158,19 @@ namespace TopTwitchClipBotCore.Modules
             var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
             await ReplyAsync(result);
         }
+        [Command(nameof(TimeZone))]
+        [Alias("Time Zone", "Utc Offset", "UtcOffset")]
+        public async Task TimeZone([ValidUtcOffset] decimal utcHourOffset) => await UpdateTimeZone(utcHourOffset);
+        [Command(nameof(TimeZone))]
+        [Alias("Time Zone", "Utc Offset", "UtcOffset")]
+        public async Task TimeZone([OffCommand] string off) => await UpdateTimeZone(null);
+        async Task UpdateTimeZone(decimal? utcHourOffset)
+        {
+            var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
+            var container = match.FromUtcHourOffset(utcHourOffset);
+            var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+            await ReplyAsync(result);
+        }
         async Task ReplyAsync(ChannelConfigContainer result)
         {
             var streamersText = _TopClipsModuleHelper.BuildStreamersText(result);
@@ -162,7 +178,8 @@ namespace TopTwitchClipBotCore.Modules
             var clipsAtATime = _TopClipsModuleHelper.DetermineClipsAtATime(result);
             var timeSpanString = _TopClipsModuleHelper.TimeSpanBetweenClipsAsString(result);
             var globalMinViewsString = _TopClipsModuleHelper.GlobalMinViewsAsString(result);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString);
+            var timeZoneString = _TopClipsModuleHelper.BuildTimeZoneString(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString, timeZoneString);
             await ReplyAsync(message: string.Empty, embed: embed);
         }
         protected override async Task<IUserMessage> ReplyAsync(string message = null, bool isTTS = false, Embed embed = null, RequestOptions options = null)

@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
+using TopTwitchClipBotModel;
 
 namespace TopTwitchClipBotFunctions.Models
 {
     public class UnseenChannelClipsContainer
     {
-        public int? NumberOfClipsAtATime { get; set; }
+        public PendingChannelConfigContainer PendingChannelConfigContainer { get; set; }
         public List<ClipHistoryContainer> UnseenClips { get; set; }
         public UnseenChannelClipsContainer() { }
-        public UnseenChannelClipsContainer(int? numberOfClipsAtATime, List<ClipHistoryContainer> unseenClips)
+        public UnseenChannelClipsContainer(PendingChannelConfigContainer pendingChannelConfigContainer, List<ClipHistoryContainer> unseenClips)
         {
-            NumberOfClipsAtATime = numberOfClipsAtATime;
+            PendingChannelConfigContainer = pendingChannelConfigContainer;
             UnseenClips = unseenClips;
         }
     }

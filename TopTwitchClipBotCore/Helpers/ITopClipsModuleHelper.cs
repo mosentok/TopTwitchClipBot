@@ -11,12 +11,15 @@ namespace TopTwitchClipBotCore.Helpers
         bool IsInRange(string postingHourString, out int postingHour);
         bool ShouldDeleteAll(string broadcaster);
         bool ShouldTurnCommandOff(string input);
+        bool IsInUtcRange(decimal utcHourOffset);
+        bool IsValidTimeZoneFraction(decimal utcHourOffset);
         string DeterminePostWhen(ChannelConfigContainer container);
         string BuildStreamersText(ChannelConfigContainer container);
         string DetermineClipsAtATime(ChannelConfigContainer container);
         long? TicksFromIntervalTime(int interval, Time time);
         string TimeSpanBetweenClipsAsString(ChannelConfigContainer result);
         string GlobalMinViewsAsString(ChannelConfigContainer result);
-        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString);
+        string BuildTimeZoneString(ChannelConfigContainer result);
+        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString, string timeZoneString);
     }
 }

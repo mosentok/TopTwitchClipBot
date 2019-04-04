@@ -50,12 +50,12 @@ namespace TopTwitchClipBotFunctions.Helpers
             var clipsCache = new Dictionary<string, GetClipsResponse>();
             foreach (var channelContainer in channelContainers)
             {
-                var broadcasters = new List<PendingBroadcasterConfig>();
+                var broadcastersReadyToPost = new List<PendingBroadcasterConfig>();
                 foreach (var broadcasterContainer in channelContainer.Broadcasters)
                 {
                     var isReadyToPost = IsReadyToPost();
                     if (isReadyToPost)
-                        broadcasters.Add(broadcasterContainer);
+                        broadcastersReadyToPost.Add(broadcasterContainer);
                     bool IsReadyToPost()
                     {
                         if (!enableNumberOfClipsPerDay)
@@ -66,27 +66,30 @@ namespace TopTwitchClipBotFunctions.Helpers
                         return numberOfClipsSeenInTheLastDay < broadcasterContainer.NumberOfClipsPerDay.Value; //is below cap
                     }
                 }
-                if (broadcasters.Any())
-                    pendingContainers.Add(new PendingChannelConfigContainer(channelContainer, broadcasters));
+                if (broadcastersReadyToPost.Any())
+                    pendingContainers.Add(channelContainer.FromBroadcasters(broadcastersReadyToPost));
             }
             return pendingContainers;
         }
-        public List<ClipHistoryContainer> AtATimeContainers(List<UnseenChannelClipsContainer> unseenChannelClipsContainers)
+        public List<UnseenChannelClipsContainer> AtATimeContainers(List<UnseenChannelClipsContainer> unseenChannelClipsContainers)
         {
-            var clipContainers = new List<ClipHistoryContainer>();
+            var results = new List<UnseenChannelClipsContainer>();
             foreach (var unseenChannelClipsContainer in unseenChannelClipsContainers)
             {
                 var takenClipContainers = TakeClipsAtATime();
-                if (takenClipContainers.Any())
-                    clipContainers.AddRange(takenClipContainers);
-                List<ClipHistoryContainer> TakeClipsAtATime()
+                if (takenClipContainers.UnseenClips.Any())
+                    results.Add(takenClipContainers);
+                UnseenChannelClipsContainer TakeClipsAtATime()
                 {
-                    if (unseenChannelClipsContainer.NumberOfClipsAtATime.HasValue)
-                        return unseenChannelClipsContainer.UnseenClips.Take(unseenChannelClipsContainer.NumberOfClipsAtATime.Value).ToList();
-                    return unseenChannelClipsContainer.UnseenClips;
+                    var pendingChannelConfigContainer = unseenChannelClipsContainer.PendingChannelConfigContainer;
+                    var numberOfClipsAtATime = pendingChannelConfigContainer.NumberOfClipsAtATime;
+                    if (!numberOfClipsAtATime.HasValue)
+                        return unseenChannelClipsContainer;
+                    var unseenClips = unseenChannelClipsContainer.UnseenClips.Take(numberOfClipsAtATime.Value).ToList();
+                    return new UnseenChannelClipsContainer(pendingChannelConfigContainer, unseenClips);
                 }
             }
-            return clipContainers;
+            return results;
         }
         public List<UnseenChannelClipsContainer> BuildUnseenClipContainers(List<ChannelClipsContainer> channelClipsContainers)
         {
@@ -115,7 +118,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                     }
                 }
                 if (unseenClips.Any())
-                    results.Add(new UnseenChannelClipsContainer(channelClipsContainer.PendingChannelConfigContainer.NumberOfClipsAtATime, unseenClips));
+                    results.Add(new UnseenChannelClipsContainer(channelClipsContainer.PendingChannelConfigContainer, unseenClips));
             }
             return results;
         }
@@ -175,7 +178,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             }
             return results;
         }
-        public async Task<List<ClipHistoryContainer>> InsertHistories(List<ClipHistoryContainer> inserted)
+        public async Task InsertHistories(List<ClipHistoryContainer> inserted)
         {
             var toInsert = inserted.Select(s => new BroadcasterHistoryContainer
             {
@@ -186,34 +189,43 @@ namespace TopTwitchClipBotFunctions.Helpers
                 Stamp = s.Stamp
             }).ToList();
             await _Context.InsertBroadcasterHistoriesAsync(toInsert);
-            return inserted;
         }
-        public async Task<List<ChannelContainer>> BuildChannelContainers(List<ClipHistoryContainer> insertedHistories)
+        public async Task<List<ChannelContainer>> BuildChannelContainers(List<UnseenChannelClipsContainer> clipContainers)
         {
-            var groupedHistories = insertedHistories.ToLookup(s => s.ChannelId);
             var channelContainers = new List<ChannelContainer>();
-            foreach (var historyGroup in groupedHistories)
+            foreach (var clipContainer in clipContainers)
             {
-                var channel = await _DiscordWrapper.GetChannelAsync(historyGroup.Key);
-                var channelContainer = new ChannelContainer(historyGroup.ToList(), channel);
+                var channel = await _DiscordWrapper.GetChannelAsync(clipContainer.PendingChannelConfigContainer.ChannelId);
+                var channelContainer = new ChannelContainer(clipContainer, channel);
                 channelContainers.Add(channelContainer);
             }
             return channelContainers;
         }
         public async Task SendMessagesAsync(ChannelContainer channelContainer)
         {
-            foreach (var insertedContainer in channelContainer.Inserted)
+            var unseenChannelClipsContainer = channelContainer.UnseenChannelClipsContainer;
+            foreach (var insertedContainer in unseenChannelClipsContainer.UnseenClips)
             {
+                var createdAtString = BuildCreatedAtString();
                 //TODO add broadcaster to output
                 var message = new StringBuilder()
                     .AppendLine($"**{insertedContainer.Title}**")
                     .Append($"**{insertedContainer.Views}** views, ")
                     .Append($"**{insertedContainer.Duration.ToString("N0")}s** long, ")
-                    .AppendLine($"created at **{insertedContainer.CreatedAt} UTC**")
+                    .AppendLine(createdAtString)
                     .Append(insertedContainer.ClipUrl)
                     .ToString();
                 //TODO try/catch
                 await channelContainer.Channel.SendMessageAsync(text: message);
+                string BuildCreatedAtString()
+                {
+                    var utcHourOffset = channelContainer.UnseenChannelClipsContainer.PendingChannelConfigContainer.UtcHourOffset;
+                    if (!utcHourOffset.HasValue)
+                        return $"created at **{insertedContainer.CreatedAt} UTC**";
+                    var utcHourOffsetDouble = Convert.ToDouble(utcHourOffset.Value);
+                    var convertedToTimeZone = insertedContainer.CreatedAt.AddHours(utcHourOffsetDouble);
+                    return $"created at **{insertedContainer.CreatedAt}**";
+                }
             }
         }
     }

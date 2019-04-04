@@ -13,7 +13,7 @@ namespace TopTwitchClipBotModel
         Task DeleteBroadcasterConfigAsync(decimal channelId);
         Task DeleteBroadcasterConfigAsync(decimal channelId, string broadcaster);
         Task<ChannelConfigContainer> GetChannelConfigAsync(decimal channelId);
-        Task<List<PendingChannelConfigContainer>> GetPendingChannelConfigsAsync(int nowHour);
+        Task<List<PendingChannelConfigContainer>> GetPendingChannelConfigsAsync(int nowUtcHour);
         Task<BroadcasterConfigContainer> GetBroadcasterConfigAsync(decimal channelId, string broadcaster);
         Task<List<BroadcasterHistoryContainer>> InsertBroadcasterHistoriesAsync(List<BroadcasterHistoryContainer> containers);
         Task<ChannelConfigContainer> SetChannelConfigAsync(decimal channelId, ChannelConfigContainer container);
