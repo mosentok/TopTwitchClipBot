@@ -95,11 +95,13 @@ namespace TopTwitchClipBotFunctions.Helpers
                             return unseenChannelClipsContainer.UnseenClips.OrderBy(s => s.BroadcasterLastSeenAt);
                         switch (clipOrder.ToLower())
                         {
+                            //TODO replace with config
                             case "views":
                             case "view count":
                                 return unseenChannelClipsContainer.UnseenClips.OrderByDescending(s => s.Views);
                             case "oldest first":
                             case "oldest":
+                            case "even mix":
                             default:
                                 return unseenChannelClipsContainer.UnseenClips.OrderBy(s => s.BroadcasterLastSeenAt);
                         }

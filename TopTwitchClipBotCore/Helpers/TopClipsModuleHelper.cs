@@ -42,7 +42,7 @@ namespace TopTwitchClipBotCore.Helpers
             return min <= utcHourOffset && utcHourOffset <= max;
         }
         public bool IsValidTimeZoneFraction(decimal utcHourOffset)
-        { 
+        {
             var validTimeZoneFractions = _ConfigWrapper.Get<List<decimal>>("ValidTimeZoneFractions");
             return utcHourOffset % 1 == 0 || validTimeZoneFractions.Any(s => utcHourOffset % s == 0);
         }
@@ -183,7 +183,38 @@ namespace TopTwitchClipBotCore.Helpers
             var timeZoneFormat = _ConfigWrapper["TimeZoneFormat"].Replace(newLineDelimiter, "\n");
             return string.Format(timeZoneFormat, output);
         }
-        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString, string timeZoneString)
+        public string BuildClipOrderString(ChannelConfigContainer result)
+        {
+            var output = DetermineClipOrderString();
+            //TODO move this common formatting logic into a method
+            var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
+            var timeZoneFormat = _ConfigWrapper["ClipOrderFormat"].Replace(newLineDelimiter, "\n");
+            return string.Format(timeZoneFormat, output);
+            string DetermineClipOrderString()
+            {
+                switch (result.ClipOrder)
+                {
+                    //TODO replace with config
+                    case null:
+                    case "":
+                        return "even mix of streamers";
+                    default:
+                        switch (result.ClipOrder.ToLower())
+                        {
+                            case "views":
+                            case "view count":
+                                return "most views first";
+                            case "oldest first":
+                            case "oldest":
+                            case "even mix":
+                            default:
+                                return "even mix of streamers";
+                        }
+                }
+            }
+        }
+        //TODO too many parameters
+        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString, string timeZoneString, string clipOrderString)
         {
             return new EmbedBuilder()
                 .WithAuthor($"Setup for Channel # {context.Channel.Name}", context.Guild.IconUrl)
@@ -192,6 +223,7 @@ namespace TopTwitchClipBotCore.Helpers
                 .AddField("Clips at a Time", clipsAtATime, true)
                 .AddField("Global Min Views?", globalMinViewsString, true)
                 .AddField("Time Zone", timeZoneString, true)
+                .AddField("Clip Order", clipOrderString, true)
                 .AddField("Streamers", streamersText)
                 .AddField("Need Help?", _ConfigWrapper["HelpQuestionFieldText"])
                 .Build();

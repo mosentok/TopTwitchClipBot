@@ -171,6 +171,20 @@ namespace TopTwitchClipBotCore.Modules
             var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
             await ReplyAsync(result);
         }
+        [Command(nameof(OrderBy))]
+        [Alias("Order By", "ClipOrder", "Clip Order")]
+        public async Task OrderBy([Remainder] [ValidClipOrder] string clipOrder)
+        {
+            await UpdateChannelConfig(s => s.FromClipOrder(clipOrder));
+        }
+        //TODO other commands should call this
+        async Task UpdateChannelConfig(Func<ChannelConfigContainer, ChannelConfigContainer> updateMethod)
+        {
+            var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
+            var container = updateMethod(match);
+            var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+            await ReplyAsync(result);
+        }
         async Task ReplyAsync(ChannelConfigContainer result)
         {
             var streamersText = _TopClipsModuleHelper.BuildStreamersText(result);
@@ -179,7 +193,8 @@ namespace TopTwitchClipBotCore.Modules
             var timeSpanString = _TopClipsModuleHelper.TimeSpanBetweenClipsAsString(result);
             var globalMinViewsString = _TopClipsModuleHelper.GlobalMinViewsAsString(result);
             var timeZoneString = _TopClipsModuleHelper.BuildTimeZoneString(result);
-            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString, timeZoneString);
+            var clipOrderString = _TopClipsModuleHelper.BuildClipOrderString(result);
+            var embed = _TopClipsModuleHelper.BuildChannelConfigEmbed(Context, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString, timeZoneString, clipOrderString);
             await ReplyAsync(message: string.Empty, embed: embed);
         }
         protected override async Task<IUserMessage> ReplyAsync(string message = null, bool isTTS = false, Embed embed = null, RequestOptions options = null)
