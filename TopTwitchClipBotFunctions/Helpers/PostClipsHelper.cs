@@ -71,7 +71,7 @@ namespace TopTwitchClipBotFunctions.Helpers
             }
             return pendingContainers;
         }
-        public List<UnseenChannelClipsContainer> AtATimeContainers(List<UnseenChannelClipsContainer> unseenChannelClipsContainers)
+        public List<UnseenChannelClipsContainer> AtATimeContainers(List<UnseenChannelClipsContainer> unseenChannelClipsContainers, List<ClipOrderMapping> clipOrderMappings)
         {
             var results = new List<UnseenChannelClipsContainer>();
             foreach (var unseenChannelClipsContainer in unseenChannelClipsContainers)
@@ -83,7 +83,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                 {
                     var pendingChannelConfigContainer = unseenChannelClipsContainer.PendingChannelConfigContainer;
                     var numberOfClipsAtATime = pendingChannelConfigContainer.NumberOfClipsAtATime;
-                    if (!numberOfClipsAtATime.HasValue)
+                    if (!numberOfClipsAtATime.HasValue) //if no preference for clips at a time has been set
                         return unseenChannelClipsContainer;
                     var ordered = OrderUnseenClips();
                     var takenAtATime = ordered.Take(numberOfClipsAtATime.Value).ToList();
@@ -91,19 +91,31 @@ namespace TopTwitchClipBotFunctions.Helpers
                     IOrderedEnumerable<ClipHistoryContainer> OrderUnseenClips()
                     {
                         var clipOrder = unseenChannelClipsContainer.PendingChannelConfigContainer.ClipOrder;
-                        if (string.IsNullOrEmpty(clipOrder))
-                            return unseenChannelClipsContainer.UnseenClips.OrderBy(s => s.BroadcasterLastSeenAt);
-                        switch (clipOrder.ToLower())
+                        var clipOrderMatch = clipOrderMappings.Where(s => MatchesAConfig(s.MapsToClipOrders)).Select(s => s.ClipOrderKind).SingleOrDefault();
+                        if (clipOrderMatch != ClipOrderKind.None)
+                            return OrderClipsBy(clipOrderMatch);
+                        var defaultClipOrder = clipOrderMappings.Where(s => s.IsDefault).Select(s => s.ClipOrderKind).Single();
+                        return OrderClipsBy(defaultClipOrder);
+                        bool MatchesAConfig(List<string> configClipOrders)
                         {
-                            //TODO replace with config
-                            case "views":
-                            case "view count":
-                                return unseenChannelClipsContainer.UnseenClips.OrderByDescending(s => s.Views);
-                            case "oldest first":
-                            case "oldest":
-                            case "even mix":
-                            default:
-                                return unseenChannelClipsContainer.UnseenClips.OrderBy(s => s.BroadcasterLastSeenAt);
+                            return configClipOrders.Any(configClipOrder =>
+                            {
+                                if (configClipOrder == null) //if current config clip order is null
+                                    return clipOrder == null; //return that input is null too
+                                return configClipOrder.Equals(clipOrder, StringComparison.CurrentCultureIgnoreCase); //else just check equality
+                            });
+                        }
+                        IOrderedEnumerable<ClipHistoryContainer> OrderClipsBy(ClipOrderKind clipOrderKind)
+                        {
+                            switch (clipOrderKind)
+                            {
+                                case ClipOrderKind.DescendingViews:
+                                    return unseenChannelClipsContainer.UnseenClips.OrderByDescending(s => s.Views);
+                                case ClipOrderKind.None:
+                                case ClipOrderKind.AscendingBroadcasterLastSeenAt:
+                                default:
+                                    return unseenChannelClipsContainer.UnseenClips.OrderBy(s => s.BroadcasterLastSeenAt);
+                            }
                         }
                     }
                 }
@@ -142,7 +154,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                         if (!clipContainer.ExistingHistories.Any())
                             return null;
                         return clipContainer.ExistingHistories.Max(s => s.Stamp);
-                }
+                    }
                 }
                 if (unseenClips.Any())
                     results.Add(new UnseenChannelClipsContainer(channelClipsContainer.PendingChannelConfigContainer, unseenClips));

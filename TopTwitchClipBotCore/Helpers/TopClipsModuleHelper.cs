@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TopTwitchClipBotCore.Enums;
 using TopTwitchClipBotCore.Exceptions;
+using TopTwitchClipBotCore.Models;
 using TopTwitchClipBotCore.Wrappers;
 using TopTwitchClipBotModel;
 
@@ -185,31 +186,26 @@ namespace TopTwitchClipBotCore.Helpers
         }
         public string BuildClipOrderString(ChannelConfigContainer result)
         {
-            var output = DetermineClipOrderString();
+            var clipOrderDescription = DetermineClipOrderDescription();
             //TODO move this common formatting logic into a method
             var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
-            var timeZoneFormat = _ConfigWrapper["ClipOrderFormat"].Replace(newLineDelimiter, "\n");
-            return string.Format(timeZoneFormat, output);
-            string DetermineClipOrderString()
+            var clipOrderFormat = _ConfigWrapper["ClipOrderFormat"].Replace(newLineDelimiter, "\n");
+            return string.Format(clipOrderFormat, clipOrderDescription);
+            string DetermineClipOrderDescription()
             {
-                switch (result.ClipOrder)
+                var clipOrderMappings = _ConfigWrapper.Get<List<ClipOrderMapping>>("ClipOrderMappings");
+                var description = clipOrderMappings.Where(s => MatchesAConfig(s.MapsToClipOrders)).Select(s => s.Description).SingleOrDefault();
+                if (description != null)
+                    return description;
+                return clipOrderMappings.Where(s => s.IsDefault).Select(s => s.Description).Single();
+                bool MatchesAConfig(List<string> configClipOrders)
                 {
-                    //TODO replace with config
-                    case null:
-                    case "":
-                        return "even mix of streamers";
-                    default:
-                        switch (result.ClipOrder.ToLower())
-                        {
-                            case "views":
-                            case "view count":
-                                return "most views first";
-                            case "oldest first":
-                            case "oldest":
-                            case "even mix":
-                            default:
-                                return "even mix of streamers";
-                        }
+                    return configClipOrders.Any(configClipOrder =>
+                    {
+                        if (configClipOrder == null) //if current config clip order is null
+                            return result.ClipOrder == null; //return that input is null too
+                        return configClipOrder.Equals(result.ClipOrder, StringComparison.CurrentCultureIgnoreCase); //else just check equality
+                    });
                 }
             }
         }

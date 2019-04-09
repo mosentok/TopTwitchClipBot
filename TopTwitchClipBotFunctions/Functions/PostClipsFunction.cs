@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TopTwitchClipBotFunctions.Helpers;
+using TopTwitchClipBotFunctions.Models;
 using TopTwitchClipBotFunctions.Wrappers;
 using TopTwitchClipBotModel;
 
@@ -14,12 +17,18 @@ namespace TopTwitchClipBotFunctions.Functions
         [FunctionName(nameof(PostClipsFunction))]
         public static async Task Run([TimerTrigger("%PostClipsFunctionCron%")]TimerInfo myTimer, ILogger log)
         {
+            var config = new ConfigurationBuilder()
+                .AddEnvironmentVariables()
+                .Build();
+            var configWrapper = new ConfigurationWrapper(config);
+            //TODO use config wrapper
             var topClipsEndpoint = Environment.GetEnvironmentVariable("TwitchTopClipsEndpoint");
             var clientId = Environment.GetEnvironmentVariable("TwitchClientId");
             var accept = Environment.GetEnvironmentVariable("TwitchAcceptHeaderValue");
             var botToken = Environment.GetEnvironmentVariable("BotToken");
             var connectionString = Environment.GetEnvironmentVariable("TopTwitchClipBotConnectionString");
             var enableNumberOfClipsPerDay = bool.Parse(Environment.GetEnvironmentVariable("EnableNumberOfClipsPerDay"));
+            var clipOrderMappings = configWrapper.Get<List<ClipOrderMapping>>("ClipOrderMappings");
             var now = DateTime.UtcNow;
             var yesterday = now.AddDays(-1);
             var logWrapper = new LoggerWrapper(log);
@@ -36,7 +45,7 @@ namespace TopTwitchClipBotFunctions.Functions
                 var pendingClipContainers = await helper.BuildClipContainers(topClipsEndpoint, clientId, accept, readyToPostContainers);
                 var clipsWithMinViews = helper.ClipsWithMinViews(pendingClipContainers);
                 var unseenClipContainers = helper.BuildUnseenClipContainers(clipsWithMinViews);
-                var results = helper.AtATimeContainers(unseenClipContainers);
+                var results = helper.AtATimeContainers(unseenClipContainers, clipOrderMappings);
                 var unseenClips = results.SelectMany(s => s.UnseenClips).ToList();
                 await helper.InsertHistories(unseenClips);
                 var channelContainers = await helper.BuildChannelContainers(results);

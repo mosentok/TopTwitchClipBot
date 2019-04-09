@@ -1,6 +1,10 @@
 ﻿using Discord.Commands;
+using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using TopTwitchClipBotCore.Wrappers;
 
 namespace TopTwitchClipBotCore.Attributes
 {
@@ -12,18 +16,12 @@ namespace TopTwitchClipBotCore.Attributes
             var inputString = Convert.ToString(value);
             if (string.IsNullOrEmpty(inputString))
                 return Task.FromResult(PreconditionResult.FromError("Clip order must be provided."));
-            switch (inputString.ToLower())
-            {
-                //TODO replace with config
-                case "views":
-                case "view count":
-                case "oldest first":
-                case "oldest":
-                case "even mix":
-                    return Task.FromResult(PreconditionResult.FromSuccess());
-                default:
-                    return Task.FromResult(PreconditionResult.FromError($"The input string '{inputString}' is not a valid clip order."));
-            }
+            var configWrapper = services.GetService<IConfigurationWrapper>();
+            var clipOrders = configWrapper.Get<List<string>>("ClipOrders");
+            var isValidClipOrder = clipOrders.Any(s => s.Equals(inputString, StringComparison.CurrentCultureIgnoreCase));
+            if (isValidClipOrder)
+                return Task.FromResult(PreconditionResult.FromSuccess());
+            return Task.FromResult(PreconditionResult.FromError($"The input string '{inputString}' is not a valid clip order."));
         }
     }
 }
