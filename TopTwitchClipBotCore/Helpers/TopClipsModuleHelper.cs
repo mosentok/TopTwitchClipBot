@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TopTwitchClipBotCore.Enums;
 using TopTwitchClipBotCore.Exceptions;
+using TopTwitchClipBotCore.Models;
 using TopTwitchClipBotCore.Wrappers;
 using TopTwitchClipBotModel;
 
@@ -42,7 +43,7 @@ namespace TopTwitchClipBotCore.Helpers
             return min <= utcHourOffset && utcHourOffset <= max;
         }
         public bool IsValidTimeZoneFraction(decimal utcHourOffset)
-        { 
+        {
             var validTimeZoneFractions = _ConfigWrapper.Get<List<decimal>>("ValidTimeZoneFractions");
             return utcHourOffset % 1 == 0 || validTimeZoneFractions.Any(s => utcHourOffset % s == 0);
         }
@@ -183,7 +184,33 @@ namespace TopTwitchClipBotCore.Helpers
             var timeZoneFormat = _ConfigWrapper["TimeZoneFormat"].Replace(newLineDelimiter, "\n");
             return string.Format(timeZoneFormat, output);
         }
-        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString, string timeZoneString)
+        public string BuildClipOrderString(ChannelConfigContainer result)
+        {
+            var clipOrderDescription = DetermineClipOrderDescription();
+            //TODO move this common formatting logic into a method
+            var newLineDelimiter = _ConfigWrapper["NewLineDelimiter"];
+            var clipOrderFormat = _ConfigWrapper["ClipOrderFormat"].Replace(newLineDelimiter, "\n");
+            return string.Format(clipOrderFormat, clipOrderDescription);
+            string DetermineClipOrderDescription()
+            {
+                var clipOrderMappings = _ConfigWrapper.Get<List<ClipOrderMapping>>("ClipOrderMappings");
+                var description = clipOrderMappings.Where(s => MatchesAConfig(s.MapsToClipOrders)).Select(s => s.Description).SingleOrDefault();
+                if (description != null)
+                    return description;
+                return clipOrderMappings.Where(s => s.IsDefault).Select(s => s.Description).Single();
+                bool MatchesAConfig(List<string> configClipOrders)
+                {
+                    return configClipOrders.Any(configClipOrder =>
+                    {
+                        if (configClipOrder == null) //if current config clip order is null
+                            return result.ClipOrder == null; //return that input is null too
+                        return configClipOrder.Equals(result.ClipOrder, StringComparison.CurrentCultureIgnoreCase); //else just check equality
+                    });
+                }
+            }
+        }
+        //TODO too many parameters
+        public Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString, string timeZoneString, string clipOrderString)
         {
             return new EmbedBuilder()
                 .WithAuthor($"Setup for Channel # {context.Channel.Name}", context.Guild.IconUrl)
@@ -192,6 +219,7 @@ namespace TopTwitchClipBotCore.Helpers
                 .AddField("Clips at a Time", clipsAtATime, true)
                 .AddField("Global Min Views?", globalMinViewsString, true)
                 .AddField("Time Zone", timeZoneString, true)
+                .AddField("Clip Order", clipOrderString, true)
                 .AddField("Streamers", streamersText)
                 .AddField("Need Help?", _ConfigWrapper["HelpQuestionFieldText"])
                 .Build();

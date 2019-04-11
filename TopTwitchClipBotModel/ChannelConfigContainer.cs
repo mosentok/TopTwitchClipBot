@@ -13,6 +13,7 @@ namespace TopTwitchClipBotModel
         public long? TimeSpanBetweenClipsAsTicks { get; set; }
         public int? GlobalMinViews { get; set; }
         public decimal? UtcHourOffset { get; set; }
+        public string ClipOrder { get; set; }
         public List<BroadcasterConfigContainer> Broadcasters { get; set; }
         public ChannelConfigContainer() { }
         public ChannelConfigContainer(ChannelConfig channelConfig)
@@ -25,6 +26,7 @@ namespace TopTwitchClipBotModel
             TimeSpanBetweenClipsAsTicks = channelConfig.TimeSpanBetweenClipsAsTicks;
             GlobalMinViews = channelConfig.GlobalMinViews;
             UtcHourOffset = channelConfig.UtcHourOffset;
+            ClipOrder = channelConfig.ClipOrder;
             Broadcasters = channelConfig.BroadcasterConfigs.Select(s => new BroadcasterConfigContainer(s)).ToList();
         }
         public ChannelConfigContainer FromPostingHours(int? minPostingHour, int? maxPostingHour)
@@ -38,7 +40,8 @@ namespace TopTwitchClipBotModel
                 NumberOfClipsAtATime = NumberOfClipsAtATime,
                 TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
                 GlobalMinViews = GlobalMinViews,
-                UtcHourOffset = UtcHourOffset
+                UtcHourOffset = UtcHourOffset,
+                ClipOrder = ClipOrder
             };
         }
         public ChannelConfigContainer FromClipsAtATime(int? numberOfClipsAtATime)
@@ -52,7 +55,8 @@ namespace TopTwitchClipBotModel
                 NumberOfClipsAtATime = numberOfClipsAtATime,
                 TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
                 GlobalMinViews = GlobalMinViews,
-                UtcHourOffset = UtcHourOffset
+                UtcHourOffset = UtcHourOffset,
+                ClipOrder = ClipOrder
             };
         }
         public ChannelConfigContainer FromTimeSpanBetweenClipsAsTicks(long? timeSpanBetweenClipsAsTicks)
@@ -66,7 +70,8 @@ namespace TopTwitchClipBotModel
                 NumberOfClipsAtATime = NumberOfClipsAtATime,
                 TimeSpanBetweenClipsAsTicks = timeSpanBetweenClipsAsTicks,
                 GlobalMinViews = GlobalMinViews,
-                UtcHourOffset = UtcHourOffset
+                UtcHourOffset = UtcHourOffset,
+                ClipOrder = ClipOrder
             };
         }
         public ChannelConfigContainer FromGlobalMinViews(int? globalMinViews)
@@ -80,7 +85,8 @@ namespace TopTwitchClipBotModel
                 NumberOfClipsAtATime = NumberOfClipsAtATime,
                 TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
                 GlobalMinViews = globalMinViews,
-                UtcHourOffset = UtcHourOffset
+                UtcHourOffset = UtcHourOffset,
+                ClipOrder = ClipOrder
             };
         }
         public ChannelConfigContainer FromUtcHourOffset(decimal? utcHourOffset)
@@ -94,7 +100,23 @@ namespace TopTwitchClipBotModel
                 NumberOfClipsAtATime = NumberOfClipsAtATime,
                 TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
                 GlobalMinViews = GlobalMinViews,
-                UtcHourOffset = utcHourOffset
+                UtcHourOffset = utcHourOffset,
+                ClipOrder = ClipOrder
+            };
+        }
+        public ChannelConfigContainer FromClipOrder(string clipOrder)
+        {
+            return new ChannelConfigContainer
+            {
+                ChannelId = ChannelId,
+                Prefix = Prefix,
+                MinPostingHour = MinPostingHour,
+                MaxPostingHour = MaxPostingHour,
+                NumberOfClipsAtATime = NumberOfClipsAtATime,
+                TimeSpanBetweenClipsAsTicks = TimeSpanBetweenClipsAsTicks,
+                GlobalMinViews = GlobalMinViews,
+                UtcHourOffset = UtcHourOffset,
+                ClipOrder = clipOrder
             };
         }
     }

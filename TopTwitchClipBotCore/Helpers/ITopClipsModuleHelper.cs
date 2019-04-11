@@ -20,6 +20,7 @@ namespace TopTwitchClipBotCore.Helpers
         string TimeSpanBetweenClipsAsString(ChannelConfigContainer result);
         string GlobalMinViewsAsString(ChannelConfigContainer result);
         string BuildTimeZoneString(ChannelConfigContainer result);
-        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString, string timeZoneString);
+        string BuildClipOrderString(ChannelConfigContainer result);
+        Embed BuildChannelConfigEmbed(ICommandContext context, string postWhen, string streamersText, string clipsAtATime, string timeSpanString, string globalMinViewsString, string timeZoneString, string clipOrderString);
     }
 }

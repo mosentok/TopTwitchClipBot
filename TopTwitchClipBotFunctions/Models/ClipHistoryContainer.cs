@@ -7,6 +7,7 @@ namespace TopTwitchClipBotFunctions.Models
     {
         public decimal ChannelId { get; set; }
         public int BroadcasterConfigId { get; set; }
+        public DateTime? BroadcasterLastSeenAt { get; set; }
         public string Slug { get; set; }
         public string ClipUrl { get; set; }
         public string Title { get; set; }

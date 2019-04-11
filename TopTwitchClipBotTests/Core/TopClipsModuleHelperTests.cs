@@ -185,7 +185,8 @@ namespace TopTwitchClipBotTests.Core
             const string timeSpanString = "some time between clips";
             const string globalMinViewsString = "some global min views";
             const string timeZoneString = "some time zone string";
-            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString, timeZoneString);
+            const string clipOrderString = "some clip order string";
+            var result = _TopClipsModuleHelper.BuildChannelConfigEmbed(context.Object, postWhen, streamersText, clipsAtATime, timeSpanString, globalMinViewsString, timeZoneString, clipOrderString);
             context.VerifyAll();
             _ConfigWrapper.VerifyAll();
             Assert.That(result.Author.Value.Name, Is.EqualTo($"Setup for Channel # {channelName}"));
@@ -205,12 +206,15 @@ namespace TopTwitchClipBotTests.Core
             Assert.That(result.Fields[4].Name, Is.EqualTo("Time Zone"));
             Assert.That(result.Fields[4].Value, Is.EqualTo(timeZoneString));
             Assert.That(result.Fields[4].Inline, Is.EqualTo(true));
-            Assert.That(result.Fields[5].Name, Is.EqualTo("Streamers"));
-            Assert.That(result.Fields[5].Value, Is.EqualTo(streamersText));
-            Assert.That(result.Fields[5].Inline, Is.EqualTo(false));
-            Assert.That(result.Fields[6].Name, Is.EqualTo("Need Help?"));
-            Assert.That(result.Fields[6].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[5].Name, Is.EqualTo("Clip Order"));
+            Assert.That(result.Fields[5].Value, Is.EqualTo(clipOrderString));
+            Assert.That(result.Fields[5].Inline, Is.EqualTo(true));
+            Assert.That(result.Fields[6].Name, Is.EqualTo("Streamers"));
+            Assert.That(result.Fields[6].Value, Is.EqualTo(streamersText));
             Assert.That(result.Fields[6].Inline, Is.EqualTo(false));
+            Assert.That(result.Fields[7].Name, Is.EqualTo("Need Help?"));
+            Assert.That(result.Fields[7].Value, Is.EqualTo(helpText));
+            Assert.That(result.Fields[7].Inline, Is.EqualTo(false));
         }
     }
 }

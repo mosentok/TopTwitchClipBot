@@ -19,6 +19,7 @@ namespace TopTwitchClipBotModel
         public int? GlobalMinViews { get; set; }
         [Column(TypeName = "decimal(3,1)")]
         public decimal? UtcHourOffset { get; set; }
+        public string ClipOrder { get; set; }
         public virtual ICollection<BroadcasterConfig> BroadcasterConfigs { get; set; }
     }
 }
