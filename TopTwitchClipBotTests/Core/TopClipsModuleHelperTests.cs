@@ -21,6 +21,15 @@ namespace TopTwitchClipBotTests.Core
             _ConfigWrapper = new Mock<IConfigurationWrapper>();
             _TopClipsModuleHelper = new TopClipsModuleHelper(_ConfigWrapper.Object);
         }
+        [TestCase(null, null)]
+        [TestCase(-1, null)]
+        [TestCase(0, null)]
+        [TestCase(1, 1)]
+        public void ConvertNegativeToNull(int? input, int? expectedResult)
+        {
+            var result = _TopClipsModuleHelper.ConvertNegativeToNull(input);
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
         [TestCase("Off", true)]
         [TestCase("off", true)]
         [TestCase("All The Time", true)]
