@@ -7,6 +7,7 @@ using TopTwitchClipBotCore.Attributes;
 using TopTwitchClipBotCore.Enums;
 using TopTwitchClipBotCore.Exceptions;
 using TopTwitchClipBotCore.Helpers;
+using TopTwitchClipBotCore.Models;
 using TopTwitchClipBotCore.Wrappers;
 using TopTwitchClipBotModel;
 
@@ -60,46 +61,56 @@ namespace TopTwitchClipBotCore.Modules
         [Command(nameof(Of))]
         public async Task Of(string broadcaster, int? input = null, [Remainder] string option = null)
         {
-            var match = await _FunctionWrapper.GetBroadcasterConfigAsync(Context.Channel.Id, broadcaster);
-            BroadcasterConfigContainer container;
+            PostBroadcasterConfigResponse result;
             var enableNumberOfClipsPerDay = _ConfigWrapper.GetValue<bool>("EnableNumberOfClipsPerDay");
-            if (!enableNumberOfClipsPerDay) //default to min views logic
-                container = ContainerFromMinViews();
+            if (!enableNumberOfClipsPerDay) //clips per day is disabled, so default to min views logic
+                result = await ContainerFromMinViews();
             else if (string.IsNullOrEmpty(option)) //no default to assume, just return
                 return;
             else
-                switch (option.ToLower())
-                {
-                    case "clips":
-                    case "clips per day":
-                        if (input.HasValue && input.Value > 0)
-                            container = match.FromClipsPerDay(input);
-                        else
-                            container = match.FromClipsPerDay(null);
-                        break;
-                    case "views":
-                    case "min views":
-                        container = ContainerFromMinViews();
-                        break;
-                    default:
-                        container = new BroadcasterConfigContainer
-                        {
-                            ChannelId = Context.Channel.Id,
-                            Broadcaster = broadcaster
-                        };
-                        break;
-                }
-            BroadcasterConfigContainer ContainerFromMinViews()
-            {
-                if (input.HasValue && input.Value > 0)
-                    return match.FromMinViews(input);
-                return match.FromMinViews(null);
-            }
-            var result = await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
+                result = await UpdateByOption(); //option provided, update using it
             if (!string.IsNullOrEmpty(result.ErrorMessage))
                 await ReplyAsync(message: result.ErrorMessage);
             else
                 await ReplyAsync(result.ChannelConfigContainer);
+            async Task<PostBroadcasterConfigResponse> ContainerFromMinViews()
+            {
+                int? newMinViews;
+                if (input.HasValue && input.Value > 0)
+                    newMinViews = input;
+                else
+                    newMinViews = null;
+                return await UpdateBroadcasterConfig(s => s.FromMinViews(newMinViews));
+            }
+            async Task<PostBroadcasterConfigResponse> UpdateByOption()
+            {
+                switch (option.ToLower())
+                {
+                    case "clips":
+                    case "clips per day":
+                        int? newClipsPerDay;
+                        if (input.HasValue && input.Value > 0)
+                            newClipsPerDay = input;
+                        else
+                            newClipsPerDay = null;
+                        return await UpdateBroadcasterConfig(s => s.FromClipsPerDay(newClipsPerDay));
+                    case "views":
+                    case "min views":
+                        return await ContainerFromMinViews();
+                    default:
+                        return await UpdateBroadcasterConfig(s => new BroadcasterConfigContainer
+                        {
+                            ChannelId = Context.Channel.Id,
+                            Broadcaster = broadcaster
+                        });
+                }
+            }
+            async Task<PostBroadcasterConfigResponse> UpdateBroadcasterConfig(Func<BroadcasterConfigContainer, BroadcasterConfigContainer> updateMethod)
+            {
+                var match = await _FunctionWrapper.GetBroadcasterConfigAsync(Context.Channel.Id, broadcaster);
+                var container = updateMethod(match);
+                return await _FunctionWrapper.PostBroadcasterConfigAsync(Context.Channel.Id, broadcaster, container);
+            }
         }
         [Command(nameof(Remove))]
         public async Task Remove(string broadcaster)
