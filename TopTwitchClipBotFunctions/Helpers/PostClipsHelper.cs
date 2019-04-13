@@ -263,7 +263,7 @@ namespace TopTwitchClipBotFunctions.Helpers
                         return $"created at **{insertedContainer.CreatedAt} UTC**";
                     var utcHourOffsetDouble = Convert.ToDouble(utcHourOffset.Value);
                     var convertedToTimeZone = insertedContainer.CreatedAt.AddHours(utcHourOffsetDouble);
-                    return $"created at **{insertedContainer.CreatedAt}**";
+                    return $"created at **{convertedToTimeZone}**";
                 }
             }
         }
