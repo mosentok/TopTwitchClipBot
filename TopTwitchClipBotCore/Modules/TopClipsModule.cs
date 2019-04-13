@@ -41,9 +41,7 @@ namespace TopTwitchClipBotCore.Modules
             var shouldTurnCommandOff = _TopClipsModuleHelper.ShouldTurnCommandOff(input);
             if (shouldTurnCommandOff)
             {
-                var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-                var container = match.FromPostingHours(null, null);
-                var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+                var result = await UpdateChannelConfig(s => s.FromPostingHours(null, null));
                 await ReplyAsync(result);
             }
             else
@@ -55,9 +53,7 @@ namespace TopTwitchClipBotCore.Modules
                 var maxInRange = _TopClipsModuleHelper.IsInRange(split[2], out var maxPostingHour);
                 if (!(minInRange && maxInRange) || minPostingHour == maxPostingHour)
                     return;
-                var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-                var container = match.FromPostingHours(minPostingHour, maxPostingHour);
-                var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+                var result = await UpdateChannelConfig(s => s.FromPostingHours(minPostingHour, maxPostingHour));
                 await ReplyAsync(result);
             }
         }
@@ -123,9 +119,7 @@ namespace TopTwitchClipBotCore.Modules
             try
             {
                 var ticks = _TopClipsModuleHelper.TicksFromIntervalTime(interval, time);
-                var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-                var container = match.FromTimeSpanBetweenClipsAsTicks(ticks);
-                var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+                var result = await UpdateChannelConfig(s => s.FromTimeSpanBetweenClipsAsTicks(ticks));
                 await ReplyAsync(result);
             }
             catch (ModuleException ex)
@@ -137,25 +131,24 @@ namespace TopTwitchClipBotCore.Modules
         [Alias("Clips At A Time")]
         public async Task AtATime(int numberOfClipsAtATime)
         {
-            var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            ChannelConfigContainer container;
+            int? newNumberOfClipsAtATime;
             if (numberOfClipsAtATime > 0)
-                container = match.FromClipsAtATime(numberOfClipsAtATime);
+                newNumberOfClipsAtATime = numberOfClipsAtATime;
             else
-                container = match.FromClipsAtATime(null);
-            var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+                newNumberOfClipsAtATime = null;
+            var result = await UpdateChannelConfig(s => s.FromClipsAtATime(newNumberOfClipsAtATime));
             await ReplyAsync(result);
         }
         [Command("Min Views")]
         public async Task MinViews(int minViews)
         {
             var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            ChannelConfigContainer container;
+            int? newMinViews;
             if (minViews > 0)
-                container = match.FromGlobalMinViews(minViews);
+                newMinViews = minViews;
             else
-                container = match.FromGlobalMinViews(null);
-            var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+                newMinViews = null;
+            var result = await UpdateChannelConfig(s => s.FromGlobalMinViews(newMinViews));
             await ReplyAsync(result);
         }
         [Command(nameof(TimeZone))]
@@ -166,24 +159,21 @@ namespace TopTwitchClipBotCore.Modules
         public async Task TimeZone([OffCommand] string off) => await UpdateTimeZone(null);
         async Task UpdateTimeZone(decimal? utcHourOffset)
         {
-            var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            var container = match.FromUtcHourOffset(utcHourOffset);
-            var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
+            var result = await UpdateChannelConfig(s => s.FromUtcHourOffset(utcHourOffset));
             await ReplyAsync(result);
         }
         [Command(nameof(OrderBy))]
         [Alias("Order By", "ClipOrder", "Clip Order")]
         public async Task OrderBy([Remainder] [ValidClipOrder] string clipOrder)
         {
-            await UpdateChannelConfig(s => s.FromClipOrder(clipOrder));
+            var result = await UpdateChannelConfig(s => s.FromClipOrder(clipOrder));
+            await ReplyAsync(result);
         }
-        //TODO other commands should call this
-        async Task UpdateChannelConfig(Func<ChannelConfigContainer, ChannelConfigContainer> updateMethod)
+        async Task<ChannelConfigContainer> UpdateChannelConfig(Func<ChannelConfigContainer, ChannelConfigContainer> updateMethod)
         {
             var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
             var container = updateMethod(match);
-            var result = await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
-            await ReplyAsync(result);
+            return await _FunctionWrapper.PostChannelConfigAsync(Context.Channel.Id, container);
         }
         async Task ReplyAsync(ChannelConfigContainer result)
         {
