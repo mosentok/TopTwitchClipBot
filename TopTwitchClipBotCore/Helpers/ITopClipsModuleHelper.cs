@@ -7,6 +7,8 @@ namespace TopTwitchClipBotCore.Helpers
 {
     public interface ITopClipsModuleHelper
     {
+        int? ConvertNegativeToNull(int input);
+        int? ConvertNegativeToNull(int? input);
         bool IsCorrectBetweenLength(string input, out string[] split);
         bool IsInRange(string postingHourString, out int postingHour);
         bool ShouldDeleteAll(string broadcaster);

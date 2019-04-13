@@ -18,6 +18,18 @@ namespace TopTwitchClipBotCore.Helpers
         {
             _ConfigWrapper = configWrapper;
         }
+        public int? ConvertNegativeToNull(int input)
+        {
+            if (input <= 0)
+                return null;
+            return input;
+        }
+        public int? ConvertNegativeToNull(int? input)
+        {
+            if (!input.HasValue)
+                return null;
+            return ConvertNegativeToNull(input.Value);
+        }
         public bool ShouldTurnCommandOff(string input)
         {
             return input.Equals("Off", StringComparison.CurrentCultureIgnoreCase) || input.Equals("all the time", StringComparison.CurrentCultureIgnoreCase);

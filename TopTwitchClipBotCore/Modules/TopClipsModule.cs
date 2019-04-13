@@ -75,11 +75,7 @@ namespace TopTwitchClipBotCore.Modules
                 await ReplyAsync(result.ChannelConfigContainer);
             async Task<PostBroadcasterConfigResponse> ContainerFromMinViews()
             {
-                int? newMinViews;
-                if (input.HasValue && input.Value > 0)
-                    newMinViews = input;
-                else
-                    newMinViews = null;
+                var newMinViews = _TopClipsModuleHelper.ConvertNegativeToNull(input);
                 return await UpdateBroadcasterConfig(s => s.FromMinViews(newMinViews));
             }
             async Task<PostBroadcasterConfigResponse> UpdateByOption()
@@ -88,11 +84,7 @@ namespace TopTwitchClipBotCore.Modules
                 {
                     case "clips":
                     case "clips per day":
-                        int? newClipsPerDay;
-                        if (input.HasValue && input.Value > 0)
-                            newClipsPerDay = input;
-                        else
-                            newClipsPerDay = null;
+                        var newClipsPerDay = _TopClipsModuleHelper.ConvertNegativeToNull(input);
                         return await UpdateBroadcasterConfig(s => s.FromClipsPerDay(newClipsPerDay));
                     case "views":
                     case "min views":
@@ -142,23 +134,14 @@ namespace TopTwitchClipBotCore.Modules
         [Alias("Clips At A Time")]
         public async Task AtATime(int numberOfClipsAtATime)
         {
-            int? newNumberOfClipsAtATime;
-            if (numberOfClipsAtATime > 0)
-                newNumberOfClipsAtATime = numberOfClipsAtATime;
-            else
-                newNumberOfClipsAtATime = null;
+            var newNumberOfClipsAtATime = _TopClipsModuleHelper.ConvertNegativeToNull(numberOfClipsAtATime);
             var result = await UpdateChannelConfig(s => s.FromClipsAtATime(newNumberOfClipsAtATime));
             await ReplyAsync(result);
         }
         [Command("Min Views")]
         public async Task MinViews(int minViews)
         {
-            var match = await _FunctionWrapper.GetChannelConfigAsync(Context.Channel.Id);
-            int? newMinViews;
-            if (minViews > 0)
-                newMinViews = minViews;
-            else
-                newMinViews = null;
+            var newMinViews = _TopClipsModuleHelper.ConvertNegativeToNull(minViews);
             var result = await UpdateChannelConfig(s => s.FromGlobalMinViews(newMinViews));
             await ReplyAsync(result);
         }
